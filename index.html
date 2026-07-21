@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Harper Austin's personal website." />
+    <meta name="theme-color" content="#02002f" />
+    <title>Harper Austin</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <button class="why-button" id="openWhy" type="button">why?</button>
+
+      <h1>Harper Austin</h1>
+      <p class="intro">
+        CS student at Brown University. I like working on AI, from research to
+        application.
+      </p>
+
+      <nav aria-label="Profile links">
+        <a href="https://github.com/harperaustin" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/harperaustin" target="_blank" rel="noreferrer">LinkedIn</a>
+        <a href="mailto:?subject=Hello%20Harper">Email</a>
+        <button id="openAbout" type="button">About me</button>
+      </nav>
+
+      <p class="visitor-counter">
+        You are visitor no. <strong>000042</strong>
+      </p>
+    </main>
+
+    <dialog id="aboutDialog" aria-labelledby="aboutTitle">
+      <div class="dialog-header">
+        <h2 id="aboutTitle">About me</h2>
+        <button id="closeAbout" type="button" aria-label="Close">Close</button>
+      </div>
+      <p>
+        I'm Harper, a computer science student at Brown University. I enjoy
+        turning interesting ideas into useful software, exploring new
+        technologies, and making things for the web.
+      </p>
+    </dialog>
+
+    <dialog id="whyDialog" aria-labelledby="whyTitle">
+      <div class="dialog-header">
+        <h2 id="whyTitle">Why?</h2>
+        <button id="closeWhy" type="button" aria-label="Close">Close</button>
+      </div>
+      <p>More about this version of the site will go here.</p>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>

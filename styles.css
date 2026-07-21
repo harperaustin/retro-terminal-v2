@@ -1,0 +1,183 @@
+:root {
+  color: #111;
+  background: #02002f;
+  font-family: "Times New Roman", Times, serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 28px 14px;
+  background-color: #02002f;
+  background-image:
+    radial-gradient(circle, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle, #ff8a00 0 1px, transparent 1.5px),
+    radial-gradient(circle, #9b9b9b 0 1px, transparent 1.5px);
+  background-position: 0 0, 19px 27px, 41px 12px;
+  background-size: 53px 53px, 71px 71px, 89px 89px;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+main {
+  position: relative;
+  width: min(760px, calc(100% - 20px));
+  margin: 55px auto 30px;
+  padding: 14px 18px 20px;
+  border: 8px outset #dedede;
+  background: #bdbdbd;
+  box-shadow:
+    8px 8px 0 #151515,
+    inset 2px 2px 0 #f4f4f4;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  padding-inline: 56px;
+  color: #161616;
+  font: bold clamp(42px, 10vw, 78px) "Times New Roman", Times, serif;
+  letter-spacing: 0;
+  line-height: 1.1;
+  text-shadow:
+    2px 2px #f3f3f3,
+    -2px -2px #6d6d6d;
+}
+
+.intro {
+  max-width: 600px;
+  margin: 24px auto;
+  padding: 12px;
+  border: 3px dashed #232369;
+  background: #2f2f2f;
+  color: #f4f4f4;
+  font: 18px/1.45 "Comic Sans MS", "Comic Sans", cursive;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 25px;
+  padding: 10px;
+  border-block: 4px double #333;
+}
+
+nav a,
+nav button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0000bb;
+  cursor: pointer;
+  font: bold 20px "Times New Roman", Times, serif;
+  text-decoration: underline;
+}
+
+nav a:hover,
+nav button:hover {
+  color: #fff;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 4px;
+}
+
+.why-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 9px;
+  border: 3px outset #eee;
+  background: #c0c0c0;
+  color: #111;
+  cursor: pointer;
+  font: bold 13px "Times New Roman", Times, serif;
+  text-transform: lowercase;
+}
+
+.why-button:active {
+  border-style: inset;
+}
+
+.visitor-counter {
+  margin: 18px 0 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.visitor-counter strong {
+  padding: 2px 5px;
+  border: 2px inset #aaa;
+  background: #000;
+  color: #00ff66;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.12em;
+}
+
+dialog {
+  width: min(480px, calc(100% - 40px));
+  padding: 28px;
+  border: 6px outset #dedede;
+  background: #bdbdbd;
+  color: #111;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  box-shadow: 8px 8px 0 #111;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 30 / 78%);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.dialog-header button {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: #0000bb;
+  cursor: pointer;
+}
+
+dialog p {
+  margin: 24px 0 0;
+  color: #222;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+@media (max-width: 520px) {
+  body {
+    padding-inline: 6px;
+  }
+
+  main {
+    width: calc(100% - 12px);
+    padding-inline: 10px;
+  }
+
+  h1 {
+    padding-inline: 44px;
+  }
+}
