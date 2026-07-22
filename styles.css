@@ -29,6 +29,7 @@ a {
 
 main {
   position: relative;
+  z-index: 1;
   width: min(760px, calc(100% - 20px));
   margin: 55px auto 30px;
   padding: 14px 18px 20px;
@@ -91,6 +92,42 @@ a:focus-visible,
 button:focus-visible {
   outline: 2px solid #111;
   outline-offset: 4px;
+}
+
+.scatter {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scatter .gif {
+  position: absolute;
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 45%));
+}
+
+.hand-point {
+  position: absolute;
+  top: 12px;
+  right: -36px;
+  z-index: 2;
+  width: 46px;
+  height: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: hand-nudge 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes hand-nudge {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-6px);
+  }
 }
 
 .why-button {
@@ -170,6 +207,15 @@ dialog p {
 @media (max-width: 520px) {
   body {
     padding-inline: 6px;
+  }
+
+  .scatter {
+    display: none;
+  }
+
+  .hand-point {
+    width: 38px;
+    right: -30px;
   }
 
   main {
