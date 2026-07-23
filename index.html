@@ -4,92 +4,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Harper Austin's personal website." />
-    <meta name="theme-color" content="#02002f" />
+    <meta name="theme-color" content="#d9dce3" />
     <title>Harper Austin</title>
-    <link rel="stylesheet" href="styles.css?v=8" />
+    <link rel="stylesheet" href="modern.css?v=24" />
   </head>
-  <body>
-    <div class="scatter" aria-hidden="true">
-      <img class="gif" src="assets/gifs/1.gif" alt="" style="top: 1%; left: 1%; width: 118px; transform: rotate(-4deg);" />
-      <img class="gif" src="assets/gifs/16.gif" alt="" style="top: 4%; left: 14%; width: 78px;" />
-      <img class="gif" src="assets/gifs/35.gif" alt="" style="top: 1%; left: 30%; width: 135px; transform: rotate(-3deg);" />
-      <img class="gif" src="assets/gifs/24.gif" alt="" style="top: 3%; left: 47%; width: 72px;" />
-      <img class="gif" src="assets/gifs/37.gif" alt="" style="top: 1%; left: 58%; width: 132px; transform: rotate(3deg);" />
-      <img class="gif" src="assets/gifs/28.gif" alt="" style="top: 2%; left: 80%; width: 96px;" />
-      <img class="gif" src="assets/gifs/53.gif" alt="" style="top: 1%; left: 88%; width: 120px; transform: rotate(6deg);" />
+  <body data-theme="light">
+    <section class="modern-stage" id="modernStage">
+      <main class="terminal-window">
+        <header class="terminal-titlebar">
+          <div class="traffic-lights" aria-hidden="true">
+            <span class="traffic-light close"></span>
+            <span class="traffic-light minimize"></span>
+            <span class="traffic-light maximize"></span>
+          </div>
+          <p class="terminal-title">harper — zsh — 80×24</p>
+        </header>
 
-      <img class="gif" src="assets/gifs/16-2.gif" alt="" style="top: 18%; left: 9%; width: 90px;" />
-      <img class="gif" src="assets/gifs/6-1.gif" alt="" style="top: 28%; left: 2%; width: 70px; transform: rotate(12deg);" />
-      <img class="gif" src="assets/gifs/5.gif" alt="" style="top: 42%; left: 2%; width: 112px;" />
-      <img class="gif" src="assets/gifs/18.gif" alt="" style="top: 53%; left: 13%; width: 105px;" />
-      <img class="gif" src="assets/gifs/9.gif" alt="" style="top: max(48%, 470px); left: 25%; width: 110px; transform: rotate(-6deg);" />
-      <img class="gif" src="assets/gifs/14.gif" alt="" style="top: 59%; left: 34%; width: 110px;" />
-      <img class="gif" src="assets/gifs/6.gif" alt="" style="top: max(52%, 510px); left: 47%; width: 86px;" />
+        <div class="terminal-content">
+          <div class="terminal-output" id="terminalOutput" aria-live="polite"></div>
+          <div class="command-palette" id="commandPalette" role="listbox" aria-label="Available commands" hidden></div>
+          <form class="terminal-prompt" id="terminalForm">
+            <label class="sr-only" for="terminalInput">Enter a command</label>
+            <span aria-hidden="true">❯</span>
+            <input
+              id="terminalInput"
+              type="text"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="Type / for commands"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="commandPalette"
+              aria-expanded="false"
+            />
+            <span class="command-hint" aria-hidden="true"><kbd>/</kbd> commands</span>
+            <button type="submit" aria-label="Run command">↵</button>
+          </form>
+        </div>
+      </main>
+    </section>
 
-      <img class="gif" src="assets/gifs/3.gif" alt="" style="top: 61%; left: 57%; width: 125px;" />
-      <img class="gif" src="assets/gifs/26.gif" alt="" style="top: max(48%, 470px); left: 69%; width: 128px; transform: rotate(-7deg);" />
-      <img class="gif" src="assets/gifs/8-1.gif" alt="" style="top: 58%; left: 84%; width: 88px;" />
-      <img class="gif" src="assets/gifs/7.gif" alt="" style="top: 73%; left: 4%; width: 105px;" />
-      <img class="gif" src="assets/gifs/16-1.gif" alt="" style="top: 78%; left: 17%; width: 102px; transform: rotate(8deg);" />
-      <img class="gif" src="assets/gifs/30.gif" alt="" style="top: 72%; left: 29%; width: 112px;" />
+    <section class="retro-stage" id="retroStage" aria-label="Retro website" aria-hidden="true" inert>
+      <iframe src="retro.html?v=2" title="Harper Austin retro website"></iframe>
+    </section>
 
-      <img class="gif" src="assets/gifs/8.gif" alt="" style="top: 83%; left: 41%; width: 92px;" />
-      <img class="gif" src="assets/gifs/42.gif" alt="" style="top: 67%; left: 42%; width: 240px;" />
-      <img class="gif" src="assets/gifs/9-1.gif" alt="" style="top: 84%; left: 62%; width: 100px; transform: rotate(-5deg);" />
-      <img class="gif" src="assets/gifs/7-2.gif" alt="" style="top: 72%; left: 74%; width: 138px;" />
-      <img class="gif" src="assets/gifs/2.gif" alt="" style="top: 87%; left: 88%; width: 58px; transform: rotate(9deg);" />
-      <img class="gif" src="assets/gifs/15.gif" alt="" style="top: 84%; left: 8%; width: 112px;" />
-      <img class="gif" src="assets/gifs/7-1.gif" alt="" style="top: 48%; left: 90%; width: 102px;" />
-
-      <img class="gif" src="assets/gifs2/18.gif" alt="" style="top: 18%; left: 80%; width: 112px;" />
-      <img class="gif" src="assets/gifs2/12.gif" alt="" style="top: 26%; left: 90%; width: 105px;" />
-      <img class="gif" src="assets/gifs2/1.gif" alt="" style="top: 54%; left: 2%; width: 105px;" />
-      <img class="gif" src="assets/gifs2/30.gif" alt="" style="top: 48%; left: 39%; width: 105px;" />
-      <img class="gif" src="assets/gifs2/51.gif" alt="" style="top: 61%; left: 23%; width: 125px;" />
-    </div>
-
-    <main>
-      <img class="hand-point" src="assets/gifs/hand-point.gif" alt="A pixel-art hand pointing at the why button" />
-      <button class="why-button" id="openWhy" type="button">why?</button>
-
-      <h1>Harper Austin</h1>
-      <p class="intro">
-        CS student at Brown University. I like working on AI, from research to
-        application.
-      </p>
-
-      <nav aria-label="Profile links">
-        <a href="https://github.com/harperaustin" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="https://www.linkedin.com/in/harperaustin" target="_blank" rel="noreferrer">LinkedIn</a>
-        <a href="mailto:?subject=Hello%20Harper">Email</a>
-        <button id="openAbout" type="button">About me</button>
-      </nav>
-
-      <p class="visitor-counter">
-        You are visitor no. <strong>000042</strong>
-      </p>
-    </main>
-
-    <dialog id="aboutDialog" aria-labelledby="aboutTitle">
-      <div class="dialog-header">
-        <h2 id="aboutTitle">About me</h2>
-        <button id="closeAbout" type="button" aria-label="Close">Close</button>
-      </div>
-      <p>
-        I'm Harper, a computer science student at Brown University. I enjoy
-        turning interesting ideas into useful software, exploring new
-        technologies, and making things for the web.
-      </p>
-    </dialog>
-
-    <dialog id="whyDialog" aria-labelledby="whyTitle">
-      <div class="dialog-header">
-        <h2 id="whyTitle">Why?</h2>
-        <button id="closeWhy" type="button" aria-label="Close">Close</button>
-      </div>
-      <p>More about this version of the site will go here.</p>
-    </dialog>
-
-    <script src="script.js"></script>
+    <script src="script.js?v=26"></script>
   </body>
 </html>

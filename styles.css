@@ -10,6 +10,8 @@
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   margin: 0;
   padding: 28px 14px;
@@ -27,12 +29,27 @@ a {
   font: inherit;
 }
 
-main {
+.scatter {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scatter .gif {
+  position: absolute;
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 45%));
+}
+
+.title-card {
   position: relative;
   z-index: 1;
-  width: min(760px, calc(100% - 20px));
-  margin: 55px auto 30px;
-  padding: 14px 18px 20px;
+  width: min(700px, calc(100% - 20px));
+  margin: 15vh auto 30px;
+  padding: 66px 28px 36px;
   border: 8px outset #dedede;
   background: #bdbdbd;
   box-shadow:
@@ -43,11 +60,8 @@ main {
 
 h1 {
   margin: 0;
-  padding-inline: 56px;
   color: #161616;
-  font: bold clamp(42px, 10vw, 78px) "Times New Roman", Times, serif;
-  letter-spacing: 0;
-  line-height: 1.1;
+  font: bold clamp(42px, 10vw, 78px)/1.1 "Times New Roman", Times, serif;
   text-shadow:
     2px 2px #f3f3f3,
     -2px -2px #6d6d6d;
@@ -55,7 +69,7 @@ h1 {
 
 .intro {
   max-width: 600px;
-  margin: 24px auto;
+  margin: 26px auto 0;
   padding: 12px;
   border: 3px dashed #232369;
   background: #2f2f2f;
@@ -63,50 +77,27 @@ h1 {
   font: 18px/1.45 "Comic Sans MS", "Comic Sans", cursive;
 }
 
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 25px;
-  padding: 10px;
-  border-block: 4px double #333;
-}
-
-nav a,
-nav button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #0000bb;
-  cursor: pointer;
-  font: bold 20px "Times New Roman", Times, serif;
-  text-decoration: underline;
-}
-
-nav a:hover,
-nav button:hover {
-  color: #fff;
-}
-
-a:focus-visible,
-button:focus-visible {
-  outline: 2px solid #111;
-  outline-offset: 4px;
-}
-
-.scatter {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.scatter .gif {
+.style-toggle,
+.why-button {
   position: absolute;
-  height: auto;
-  image-rendering: pixelated;
-  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 45%));
+  top: 10px;
+  padding: 5px 9px;
+  border: 3px outset #eee;
+  background: #c0c0c0;
+  cursor: pointer;
+  font: bold 13px "Times New Roman", Times, serif;
+}
+
+.style-toggle {
+  left: 10px;
+  color: #0000bb;
+  text-decoration: none;
+}
+
+.why-button {
+  right: 10px;
+  color: #111;
+  text-transform: lowercase;
 }
 
 .hand-point {
@@ -118,48 +109,18 @@ button:focus-visible {
   height: auto;
   image-rendering: pixelated;
   pointer-events: none;
-  animation: hand-nudge 0.9s ease-in-out infinite alternate;
+  animation: hand-nudge 900ms ease-in-out infinite alternate;
 }
 
-@keyframes hand-nudge {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-6px);
-  }
-}
-
-.why-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 5px 9px;
-  border: 3px outset #eee;
-  background: #c0c0c0;
-  color: #111;
-  cursor: pointer;
-  font: bold 13px "Times New Roman", Times, serif;
-  text-transform: lowercase;
-}
-
+.style-toggle:active,
 .why-button:active {
   border-style: inset;
 }
 
-.visitor-counter {
-  margin: 18px 0 0;
-  color: #333;
-  font-size: 14px;
-}
-
-.visitor-counter strong {
-  padding: 2px 5px;
-  border: 2px inset #aaa;
-  background: #000;
-  color: #00ff66;
-  font-family: "Courier New", monospace;
-  letter-spacing: 0.12em;
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 4px;
 }
 
 dialog {
@@ -204,26 +165,34 @@ dialog p {
   line-height: 1.6;
 }
 
+@keyframes hand-nudge {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-6px);
+  }
+}
+
 @media (max-width: 520px) {
   body {
     padding-inline: 6px;
   }
 
-  .scatter {
-    display: none;
+  .title-card {
+    width: calc(100% - 12px);
+    margin-top: 10vh;
+    padding-inline: 14px;
   }
 
   .hand-point {
-    width: 38px;
-    right: -30px;
+    top: 48px;
+    right: -4px;
   }
+}
 
-  main {
-    width: calc(100% - 12px);
-    padding-inline: 10px;
-  }
-
-  h1 {
-    padding-inline: 44px;
+@media (prefers-reduced-motion: reduce) {
+  .hand-point {
+    animation: none;
   }
 }
