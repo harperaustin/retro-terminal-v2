@@ -6,17 +6,22 @@
     <meta name="description" content="Harper Austin's personal website." />
     <meta name="theme-color" content="#d9dce3" />
     <title>Harper Austin</title>
-    <link rel="icon" href="favicon.svg?v=5" type="image/svg+xml" />
-    <link rel="stylesheet" href="modern.css?v=24" />
+    <link rel="icon" href="ha_icon.png?v=1" type="image/png" />
+    <link rel="stylesheet" href="modern.css?v=27" />
   </head>
-  <body data-theme="light">
+  <body>
     <section class="modern-stage" id="modernStage">
       <main class="terminal-window">
         <header class="terminal-titlebar">
-          <div class="traffic-lights" aria-hidden="true">
-            <span class="traffic-light close"></span>
-            <span class="traffic-light minimize"></span>
-            <span class="traffic-light maximize"></span>
+          <div class="traffic-lights">
+            <button
+              class="traffic-light close"
+              id="openFun"
+              type="button"
+              aria-label="Open the retro page"
+            ></button>
+            <span class="traffic-light minimize" aria-hidden="true"></span>
+            <span class="traffic-light maximize" aria-hidden="true"></span>
           </div>
           <p class="terminal-title">harper — zsh — 80×24</p>
         </header>
@@ -50,6 +55,6 @@
       <iframe src="retro.html?v=3" title="Harper Austin retro website"></iframe>
     </section>
 
-    <script src="script.js?v=41"></script>
+    <script src="script.js?v=44"></script>
   </body>
 </html>

@@ -45,7 +45,7 @@ if (terminalWindow) {
   const savedTheme = localStorage.getItem("terminalThemePreference");
   const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
   const themeChoices = ["system", "light", "dark"];
-  let themePreference = themeChoices.includes(savedTheme) ? savedTheme : "light";
+  let themePreference = themeChoices.includes(savedTheme) ? savedTheme : "system";
   let activeTheme = "dark";
 
   function applyTheme(preference) {
@@ -66,6 +66,7 @@ if (terminalWindow) {
   const output = document.querySelector("#terminalOutput");
   const form = document.querySelector("#terminalForm");
   const input = document.querySelector("#terminalInput");
+  const openFunButton = document.querySelector("#openFun");
   const commandPalette = document.querySelector("#commandPalette");
   const modernStage = document.querySelector("#modernStage");
   const retroStage = document.querySelector("#retroStage");
@@ -560,6 +561,10 @@ if (terminalWindow) {
     if (option) {
       chooseCommand(option.dataset.command, true);
     }
+  });
+
+  openFunButton.addEventListener("click", () => {
+    showRetro();
   });
 
   async function bootTerminal() {
