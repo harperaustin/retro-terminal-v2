@@ -75,6 +75,10 @@ if (terminalWindow) {
     { name: "/github", description: "Show my GitHub profile" },
     { name: "/linkedin", description: "Show my LinkedIn profile" },
     { name: "/email", description: "Open a new email draft" },
+    { name: "/jobs", description: "Browse my work experience" },
+    { name: "/courses", description: "Browse relevant coursework" },
+    { name: "/projects", description: "Browse my projects" },
+    { name: "/outside", description: "See what I enjoy outside of work" },
     { name: "/theme", description: "Set theme [light | dark | system]" },
     { name: "/clear", description: "Clear terminal output" },
     { name: "/help", description: "List available commands" },
@@ -84,6 +88,122 @@ if (terminalWindow) {
     { name: "light", value: "/theme light", description: "Use the light terminal theme" },
     { name: "dark", value: "/theme dark", description: "Use the dark terminal theme" },
     { name: "system", value: "/theme system", description: "Follow the operating system" },
+  ];
+  const jobDefinitions = [
+    {
+      name: "Microsoft",
+      value: "/jobs microsoft",
+      description: "SWE intern on CoreAI Agent Service team",
+      details: [
+        "On Microsoft’s CoreAI Agent Service team, I worked at the intersection of AI research and large-scale software infrastructure.",
+        "I researched and developed multi-agent orchestration strategies for systems that could autonomously navigate, execute, and evaluate long-horizon software engineering workflows from end to end.",
+        "I also explored how to optimize these complex AI systems beyond the agents themselves, including isolated workspaces, scalable hosting, and the surrounding infrastructure needed to run concurrent agent workflows reliably.",
+      ],
+    },
+    {
+      name: "Brown University",
+      value: "/jobs brown-university",
+      description: "Undergraduate teaching assistant",
+      details: [
+        "I’ve TA’d three courses during my time at Brown:",
+        "CSCI 0150: Introduction to Object-Oriented Programming, taught by the legendary Professor Andy van Dam. I taught foundational computer science concepts including polymorphism, recursion, and system design.",
+        "CSCI 0200: Data Structures and Algorithms, taught by Professor Kathi Fisler. I helped students build a strong foundation in data structures, algorithm design, runtime analysis, testing, and systematic problem-solving.",
+        "CSCI 1430: Computer Vision, taught by Professor James Tompkin. I taught topics including convolutional neural networks, vision transformers, and self-supervised learning.",
+      ],
+    },
+    {
+      name: "Incvbate",
+      value: "/jobs incvbate",
+      description: "Applied AI intern",
+      details: [
+        "Incvbate is a Copenhagen-based startup that supports the ecosystem of young entrepreneurs across Scandinavia.",
+        "I integrated LLMs into the company’s workflows to provide more tailored guidance and connections across a talent pool of 2,500 students.",
+        "I also advised startups on practical ways to integrate AI into their processes and operations.",
+      ],
+    },
+    {
+      name: "NorthMark Strategies",
+      value: "/jobs northmark-strategies",
+      description: "Machine Learning intern",
+      details: [
+        "I cleaned, processed, and prepared data before training and deploying time-series forecasting models from scratch to predict cloud spending.",
+        "Additionally, I developed maintenance loops that continuously updated and improved the models with current data.",
+      ],
+    },
+  ];
+  const courseSections = [
+    {
+      name: "Computer Science",
+      courses: [
+        "CSCI 0150: Object-Oriented Programming",
+        "CSCI 0200: Data Structures and Algorithms",
+        "CSCI 0220: Discrete Structures & Probability",
+        "CSCI 0320: Software Engineering",
+        "CSCI 0330: Computer Systems",
+        "CSCI 0410: Foundations of AI",
+        "CSCI 0500: Theory and Intractability",
+        "CSCI 1230: Computer Graphics",
+        "CSCI 1430: Computer Vision",
+        "CSCI 1460: Computational Linguistics",
+        "CSCI 1470: Deep Learning",
+        "CSCI 1600: Real-Time Embedded Software",
+        "CSCI 1680: Computer Networks",
+      ],
+    },
+    {
+      name: "Others",
+      courses: [
+        "CLPS 0220: Making Decisions",
+        "MATH 0520: Linear Algebra",
+        "ENGN 0930: Design Engineering",
+        "MUSC 0670: Old-Time String Band",
+        "LING 0100: Intro to Linguistics",
+        "PHIL 1835: Philosophy of AI",
+      ],
+    },
+  ];
+  const projectDefinitions = [
+    {
+      name: "ViolenceNet",
+      description:
+        "A computer vision system comparing 2D and 3D CNNs for nuanced violence detection in live and prerecorded video, with automated security and content-moderation prototypes plus YOLO-based gun and knife detection.",
+      url: "https://github.com/yalisommer/ViolenceNet",
+    },
+    {
+      name: "Hybridized Go Agent",
+      description:
+        "A competitive 5x5 Go agent combining a handcrafted opening book, a neural-network value agent, and alpha-beta search with territory- and liberty-aware heuristics.",
+      url: "https://github.com/harperaustin/hybridized-go-agent",
+    },
+    {
+      name: "Poem Sentiment Transformers",
+      description:
+        "A DistilBERT poetry sentiment classifier with 86% validation accuracy and LIME-based interpretability for analyzing how individual words influence predictions.",
+      url: "https://github.com/harperaustin/poem-sentiment-transformers",
+    },
+    {
+      name: "Mimic CAPTCHA",
+      description:
+        "An accessible React and TypeScript CAPTCHA alternative that verifies people through facial-expression and audio-tone mimicry.",
+      url: "https://github.com/harperaustin/mimic-captcha",
+    },
+    {
+      name: "MNIST from Scratch",
+      description:
+        "A fully connected neural network built with NumPy and raw Python, including manual forward propagation, backpropagation, gradient descent, and an 84% test accuracy.",
+      url: "https://github.com/harperaustin/mnist-from-scratch",
+    },
+    {
+      name: "TechRhythm",
+      description:
+        "An Arduino music system with physical controls for melodies, rhythm patterns, and tempo, plus live settings on an LCD display.",
+      url: "https://github.com/harperaustin/TechRhythm",
+    },
+    {
+      name: "Direct Preference Optimization",
+      description:
+        "An end-to-end reimplementation of the DPO paper, spanning model fine-tuning through direct preference optimization for preference alignment.",
+    },
   ];
   const commandHistory = [];
   let filteredCommands = [];
@@ -192,7 +312,12 @@ if (terminalWindow) {
   function renderCommandPalette() {
     const query = input.value.trimStart().toLowerCase();
     const isThemeQuery = query.startsWith("/theme ");
-    if (!query.startsWith("/") || (!isThemeQuery && query.includes(" ")) || input.disabled) {
+    const isJobsQuery = query.startsWith("/jobs ");
+    if (
+      !query.startsWith("/") ||
+      (!isThemeQuery && !isJobsQuery && query.includes(" ")) ||
+      input.disabled
+    ) {
       closeCommandPalette();
       return;
     }
@@ -200,6 +325,11 @@ if (terminalWindow) {
     if (isThemeQuery) {
       const themeQuery = query.slice("/theme ".length);
       filteredCommands = themeDefinitions.filter(({ name }) => name.startsWith(themeQuery));
+    } else if (isJobsQuery) {
+      const jobsQuery = query.slice("/jobs ".length);
+      filteredCommands = jobDefinitions.filter(({ name }) =>
+        name.toLowerCase().startsWith(jobsQuery),
+      );
     } else {
       filteredCommands = commandDefinitions
         .filter(({ name }) => name.startsWith(query))
@@ -249,8 +379,8 @@ if (terminalWindow) {
   }
 
   function chooseCommand(command, runImmediately) {
-    if (command === "/theme") {
-      input.value = "/theme ";
+    if (command === "/theme" || command === "/jobs") {
+      input.value = `${command} `;
       selectedCommandIndex = 0;
       renderCommandPalette();
       return;
@@ -295,16 +425,65 @@ if (terminalWindow) {
       });
     } else if (command === "about") {
       appendLine("about.md", "terminal-line terminal-section-title");
-      appendLine(
-        "I'm Harper, a computer science student at Brown University. I enjoy turning interesting ideas into useful software, exploring new technologies, and making things for the web.",
-        "terminal-line terminal-result",
-      );
+      [
+        "I am a senior CS student @ Brown. I was born and raised in Keller, Texas.",
+        "I previously interned in CoreAI @ Microsoft, where I researched and developed multi-agent orchestration methods for autonomously executing and evaluating long-horizon, end-to-end software engineering workflows.",
+        "The summer before that, I worked at NorthMark Strategies as a machine learning intern, training models from scratch and engineering a closed-loop model optimization system for continuous improvement.",
+        "In my curriculum at Brown, I’ve really enjoyed reasoning through the theory, math, and applications of modern AI systems in courses like deep learning, computational linguistics, and computer vision (which I went on to TA too).",
+        "I hope to continue to work on the frontier of technology and play a part in the development of AI, from research to application.",
+      ].forEach((paragraph) => {
+        appendLine(paragraph, "terminal-line terminal-result");
+      });
     } else if (command === "github") {
       appendLink("github.com/harperaustin", "https://github.com/harperaustin");
     } else if (command === "linkedin") {
-      appendLink("linkedin.com/in/harperaustin", "https://www.linkedin.com/in/harperaustin");
+      appendLink(
+        "linkedin.com/in/harper-austin-523743276",
+        "https://www.linkedin.com/in/harper-austin-523743276/",
+      );
     } else if (command === "email") {
-      appendLink("Compose an email", "mailto:?subject=Hello%20Harper");
+      appendLink(
+        "jharpaustin@gmail.com",
+        "mailto:jharpaustin@gmail.com?subject=Hello%20Harper",
+      );
+    } else if (command === "jobs") {
+      const requestedJob = argumentsList.join(" ");
+      const job = jobDefinitions.find(({ value }) => value === `/jobs ${requestedJob}`);
+      if (job) {
+        appendLine(job.name, "terminal-line terminal-section-title");
+        appendLine(job.description, "terminal-line terminal-result");
+        job.details.forEach((paragraph) => {
+          appendLine(paragraph, "terminal-line terminal-result");
+        });
+      } else {
+        appendLine(
+          "Usage: /jobs [microsoft | brown-university | incvbate | northmark-strategies]",
+          "terminal-line terminal-error",
+        );
+      }
+    } else if (command === "courses") {
+      appendLine("courses.md", "terminal-line terminal-section-title");
+      courseSections.forEach(({ name, courses }) => {
+        appendLine(name, "terminal-line terminal-section-title");
+        courses.forEach((course) => {
+          appendLine(`• ${course}`, "terminal-line terminal-result");
+        });
+      });
+    } else if (command === "projects") {
+      appendLine("projects.md", "terminal-line terminal-section-title");
+      projectDefinitions.forEach(({ name, description, url }) => {
+        appendLine(name, "terminal-line terminal-section-title");
+        appendLine(description, "terminal-line terminal-result");
+        if (url) {
+          appendLink(url.replace("https://", ""), url);
+        }
+      });
+    } else if (command === "outside") {
+      appendLine("outside-of-work.md", "terminal-line terminal-section-title");
+      appendLine(
+        "Outside of work, I enjoy playing and writing music on the guitar (folk-y, indie-rock-y, singer-songwriter-y sort of thing), playing soccer, hiking and camping, journaling, and film photography.",
+        "terminal-line terminal-result",
+      );
     } else if (command === "theme") {
       const requestedTheme = argumentsList[0];
       if (themeChoices.includes(requestedTheme)) {
@@ -337,8 +516,9 @@ if (terminalWindow) {
       return;
     }
     const command = input.value;
-    if (command.trim().toLowerCase() === "/theme") {
-      input.value = "/theme ";
+    const normalizedCommand = command.trim().toLowerCase();
+    if (normalizedCommand === "/theme" || normalizedCommand === "/jobs") {
+      input.value = `${normalizedCommand} `;
       selectedCommandIndex = 0;
       renderCommandPalette();
       return;
