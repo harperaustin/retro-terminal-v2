@@ -33,6 +33,7 @@
   const postContent = document.querySelector("#postContent");
   const postError = document.querySelector("#postError");
   const postDialogTitle = document.querySelector("#postDialogTitle");
+  const saveDraftButton = document.querySelector("#saveDraftButton");
   const savePostButton = document.querySelector("#savePostButton");
   let session = readSession();
   let isVerifiedAuthor = false;
@@ -151,6 +152,9 @@
         saveSession(null);
       } else {
         renderAuthorState();
+        if (!blogView.hidden && postsLoaded) {
+          await loadPosts();
+        }
       }
       return isVerifiedAuthor;
     } catch {
@@ -217,8 +221,13 @@
     blogMessage.hidden = true;
     blogDetail.hidden = false;
     blogDetailTitle.textContent = post.title;
-    blogDetailDate.dateTime = post.published_at;
-    blogDetailDate.textContent = formatPostDate(post.published_at);
+    if (post.is_draft) {
+      blogDetailDate.removeAttribute("datetime");
+      blogDetailDate.textContent = "Draft";
+    } else {
+      blogDetailDate.dateTime = post.published_at;
+      blogDetailDate.textContent = formatPostDate(post.published_at);
+    }
     blogDetailContent.replaceChildren();
     appendRichText(blogDetailContent, post.content);
     renderAuthorState();
@@ -249,12 +258,17 @@
       const button = document.createElement("button");
       button.className = "blog-post-link";
       button.type = "button";
-      const date = document.createElement("time");
-      date.dateTime = post.published_at;
-      date.textContent = formatPostDate(post.published_at);
+      const status = document.createElement(post.is_draft ? "span" : "time");
+      if (post.is_draft) {
+        status.className = "blog-draft-label";
+        status.textContent = "Draft";
+      } else {
+        status.dateTime = post.published_at;
+        status.textContent = formatPostDate(post.published_at);
+      }
       const title = document.createElement("h2");
       title.textContent = post.title;
-      button.append(title, date);
+      button.append(title, status);
       button.addEventListener("click", () => openPost(post));
       blogPosts.append(button);
     });
@@ -279,7 +293,9 @@
     blogMessage.textContent = "Loading posts…";
     try {
       const posts = await api(
-        "/rest/v1/blog_posts?select=id,title,content,published_at&order=published_at.desc",
+        "/rest/v1/blog_posts?select=id,title,content,published_at,is_draft&order=published_at.desc",
+        {},
+        isVerifiedAuthor,
       );
       renderPosts(posts);
     } catch (error) {
@@ -314,12 +330,14 @@
     });
   });
 
-  [authorDialog, postDialog].forEach((dialog) => {
-    dialog.addEventListener("click", (event) => {
-      if (event.target === dialog) {
-        dialog.close();
-      }
-    });
+  authorDialog.addEventListener("click", (event) => {
+    if (event.target === authorDialog) {
+      authorDialog.close();
+    }
+  });
+
+  postDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
   });
 
   authorForm.addEventListener("submit", async (event) => {
@@ -345,6 +363,7 @@
       }
       authorPassword.value = "";
       authorDialog.close();
+      await loadPosts();
       setView("blog");
     } catch (error) {
       authorError.textContent = error.message;
@@ -361,6 +380,7 @@
     postId.value = "";
     postError.textContent = "";
     postDialogTitle.textContent = "New post";
+    saveDraftButton.textContent = "Save as draft";
     savePostButton.textContent = "Publish post";
     postDialog.showModal();
     postTitle.focus();
@@ -377,7 +397,8 @@
     postContent.value = selectedPost.content;
     postError.textContent = "";
     postDialogTitle.textContent = "Edit post";
-    savePostButton.textContent = "Save changes";
+    saveDraftButton.textContent = selectedPost.is_draft ? "Save draft" : "Move to drafts";
+    savePostButton.textContent = selectedPost.is_draft ? "Publish post" : "Save changes";
     postDialog.showModal();
     postTitle.focus();
   });
@@ -432,10 +453,22 @@
       return;
     }
     postError.textContent = "";
-    const submitButton = postForm.querySelector('[type="submit"]');
-    submitButton.disabled = true;
+    const isDraft = event.submitter?.value === "draft";
+    const submitButtons = postForm.querySelectorAll('[type="submit"]');
+    submitButtons.forEach((button) => {
+      button.disabled = true;
+    });
     try {
       const editingPostId = postId.value;
+      const editingPost = posts.find(({ id }) => String(id) === editingPostId);
+      const postValues = {
+        title: postTitle.value.trim(),
+        content: postContent.value.trim(),
+        is_draft: isDraft,
+      };
+      if (!isDraft && (!editingPost || editingPost.is_draft)) {
+        postValues.published_at = new Date().toISOString();
+      }
       const savedPosts = await api(
         editingPostId
           ? `/rest/v1/blog_posts?id=eq.${encodeURIComponent(editingPostId)}`
@@ -443,10 +476,7 @@
         {
           method: editingPostId ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json", Prefer: "return=representation" },
-          body: JSON.stringify({
-            title: postTitle.value.trim(),
-            content: postContent.value.trim(),
-          }),
+          body: JSON.stringify(postValues),
         },
         true,
       );
@@ -464,7 +494,9 @@
     } catch (error) {
       postError.textContent = error.message;
     } finally {
-      submitButton.disabled = false;
+      submitButtons.forEach((button) => {
+        button.disabled = false;
+      });
     }
   });
 
@@ -477,6 +509,7 @@
         });
       } finally {
         saveSession(null);
+        await loadPosts();
       }
     }
   });

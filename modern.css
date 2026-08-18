@@ -327,14 +327,22 @@ a {
 }
 
 .blog-post-link time,
+.blog-post-link .blog-draft-label,
 .blog-detail > time {
   display: block;
   color: var(--muted);
   font-size: 12px;
 }
 
-.blog-post-link time {
+.blog-post-link time,
+.blog-post-link .blog-draft-label {
   margin-top: 9px;
+}
+
+.blog-post-link .blog-draft-label,
+.blog-detail > time:not([datetime]) {
+  color: var(--prompt);
+  text-transform: uppercase;
 }
 
 .blog-post-link:hover h2 {
@@ -531,14 +539,35 @@ a {
 }
 
 .blog-primary-button {
-  justify-self: end;
   padding: 9px 14px;
   color: var(--prompt);
 }
 
-.blog-primary-button:disabled {
+.blog-secondary-button {
+  padding: 9px 14px;
+  border: 1px solid var(--button-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.blog-save-actions {
+  display: flex;
+  justify-content: end;
+  gap: 9px;
+}
+
+.blog-primary-button:disabled,
+.blog-secondary-button:disabled {
   cursor: wait;
   opacity: 0.6;
+}
+
+.dialog-close-button {
+  min-width: 31px;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .terminal-content {

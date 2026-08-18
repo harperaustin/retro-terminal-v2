@@ -22,6 +22,8 @@ button for publishing posts.
 The post editor supports section headings, subheadings, fenced code blocks, and
 native expandable sections through formatting buttons above the post body.
 Authors can edit or delete a post from its full-post view.
+Posts can also be saved as private drafts; Supabase row-level security only
+returns drafts to an authorized author.
 
 ## Configure the blog
 
@@ -36,6 +38,9 @@ Authors can edit or delete a post from its full-post view.
 3. Copy the project URL and anon/public key into `site-config.js`. The anon key
    is designed to be public; never put a service-role key in this repository.
 4. Add `https://harperaust.in` as an allowed site URL in Supabase Authentication.
+
+For an existing blog database created before draft support, run
+`supabase/add-drafts.sql` once in the Supabase SQL editor.
 
 Row-level security allows everyone to read published posts but only users
 listed in `blog_authors` to create, edit, or delete them.
