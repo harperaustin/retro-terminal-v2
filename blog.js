@@ -16,6 +16,7 @@
   const blogDetailDate = document.querySelector("#blogDetailDate");
   const blogDetailContent = document.querySelector("#blogDetailContent");
   const blogDetailActions = document.querySelector("#blogDetailActions");
+  const copyPostLinkButton = document.querySelector("#copyPostLinkButton");
   const editPostButton = document.querySelector("#editPostButton");
   const deletePostButton = document.querySelector("#deletePostButton");
   const authorStatus = document.querySelector("#blogAuthorStatus");
@@ -41,6 +42,7 @@
   let postsLoaded = false;
   let posts = [];
   let selectedPost = null;
+  let pendingPostId = null;
 
   function readSession() {
     try {
@@ -83,6 +85,48 @@
     if (showBlog && !postsLoaded) {
       loadPosts();
     }
+  }
+
+  function setRoute(route) {
+    if (window.location.hash === route) {
+      applyRoute();
+    } else {
+      window.location.hash = route;
+    }
+  }
+
+  function applyRoute() {
+    const match = window.location.hash.match(/^#blog(?:\/(\d+))?$/);
+    if (!match) {
+      pendingPostId = null;
+      setView("terminal");
+      document.title = "Harper Austin";
+      return;
+    }
+    pendingPostId = match[1] || null;
+    setView("blog");
+    if (postsLoaded) {
+      showRoutedPost();
+    }
+  }
+
+  function showRoutedPost() {
+    if (!pendingPostId) {
+      closePost();
+      return;
+    }
+    const post = posts.find(({ id }) => String(id) === pendingPostId);
+    if (post) {
+      openPost(post);
+      return;
+    }
+    selectedPost = null;
+    blogPosts.hidden = true;
+    blogDetail.hidden = true;
+    blogMessage.hidden = false;
+    blogMessage.textContent = "Post not found.";
+    renderAuthorState();
+    document.title = "Blog — Harper Austin";
   }
 
   async function api(path, options = {}, authenticated = false, allowRefresh = true) {
@@ -257,6 +301,7 @@
     blogDetailContent.replaceChildren();
     appendRichText(blogDetailContent, post.content);
     renderAuthorState();
+    document.title = `${post.title} — Harper Austin`;
     blogView.scrollTop = 0;
   }
 
@@ -265,6 +310,7 @@
     blogDetail.hidden = true;
     blogPosts.hidden = false;
     renderAuthorState();
+    document.title = "Blog — Harper Austin";
     blogView.scrollTop = 0;
   }
 
@@ -295,7 +341,7 @@
       const title = document.createElement("h2");
       title.textContent = post.title;
       button.append(title, status);
-      button.addEventListener("click", () => openPost(post));
+      button.addEventListener("click", () => setRoute(`#blog/${post.id}`));
       blogPosts.append(button);
     });
     renderAuthorState();
@@ -324,6 +370,7 @@
         isVerifiedAuthor,
       );
       renderPosts(posts);
+      showRoutedPost();
     } catch (error) {
       blogMessage.textContent = `Could not load posts: ${error.message}`;
     }
@@ -348,7 +395,20 @@
     authorEmail.focus();
   }
 
-  tabs.forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      if (tab.dataset.view === "blog") {
+        setRoute("#blog");
+      } else {
+        window.history.pushState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}`,
+        );
+        applyRoute();
+      }
+    });
+  });
 
   document.querySelectorAll("[data-close-dialog]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -412,7 +472,24 @@
     postTitle.focus();
   });
 
-  blogBackButton.addEventListener("click", closePost);
+  blogBackButton.addEventListener("click", () => setRoute("#blog"));
+
+  copyPostLinkButton.addEventListener("click", async () => {
+    if (!selectedPost) {
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.hash = `blog/${selectedPost.id}`;
+    try {
+      await navigator.clipboard.writeText(url.href);
+      copyPostLinkButton.textContent = "Copied";
+      window.setTimeout(() => {
+        copyPostLinkButton.textContent = "Copy link";
+      }, 1600);
+    } catch {
+      copyPostLinkButton.textContent = "Copy failed";
+    }
+  });
 
   editPostButton.addEventListener("click", () => {
     if (!isVerifiedAuthor || !selectedPost) {
@@ -447,6 +524,8 @@
       if (!Array.isArray(deletedPosts) || deletedPosts.length !== 1) {
         throw new Error("Supabase did not authorize the deletion.");
       }
+      window.history.replaceState(null, "", "#blog");
+      pendingPostId = null;
       await loadPosts();
     } catch (error) {
       window.alert(`Could not delete post: ${error.message}`);
@@ -544,6 +623,8 @@
   window.addEventListener("terminal:author-login", () => {
     openAuthorLogin();
   });
+  window.addEventListener("hashchange", applyRoute);
   renderAuthorState();
   authorCheckPromise = verifyAuthorSession();
+  applyRoute();
 })();

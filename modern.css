@@ -365,9 +365,14 @@ a {
   cursor: pointer;
 }
 
+.blog-detail-controls,
 .blog-detail-actions {
   display: flex;
   gap: 8px;
+}
+
+.blog-detail-controls {
+  align-items: center;
 }
 
 .blog-delete-button {

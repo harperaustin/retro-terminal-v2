@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#d9dce3" />
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
-    <link rel="stylesheet" href="modern.css?v=31" />
+    <link rel="stylesheet" href="modern.css?v=32" />
   </head>
   <body>
     <section class="modern-stage" id="modernStage">
@@ -74,9 +74,12 @@
           <article class="blog-detail" id="blogDetail" hidden>
             <div class="blog-detail-toolbar">
               <button class="blog-back-button" id="blogBackButton" type="button">← All posts</button>
-              <div class="blog-detail-actions" id="blogDetailActions" hidden>
-                <button class="blog-action-button" id="editPostButton" type="button">Edit</button>
-                <button class="blog-action-button blog-delete-button" id="deletePostButton" type="button">Delete</button>
+              <div class="blog-detail-controls">
+                <button class="blog-action-button" id="copyPostLinkButton" type="button">Copy link</button>
+                <div class="blog-detail-actions" id="blogDetailActions" hidden>
+                  <button class="blog-action-button" id="editPostButton" type="button">Edit</button>
+                  <button class="blog-action-button blog-delete-button" id="deletePostButton" type="button">Delete</button>
+                </div>
               </div>
             </div>
             <time id="blogDetailDate"></time>
@@ -146,7 +149,7 @@
     </dialog>
 
     <script src="site-config.js?v=1"></script>
-    <script src="blog.js?v=5"></script>
+    <script src="blog.js?v=6"></script>
     <script src="script.js?v=46"></script>
   </body>
 </html>
