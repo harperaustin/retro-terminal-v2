@@ -15,6 +15,31 @@ fixed stages can only be switched through `/fun` and **Back to homepage**;
 the terminal's red close button triggers the same visual transition without
 printing a command. Returning to the modern terminal is immediate.
 
+The **Blog** tab reads published posts from Supabase. The unlisted `/author`
+terminal command opens the author login; after login, the Blog tab shows a `+`
+button for publishing posts.
+
+The post editor supports section headings, subheadings, fenced code blocks, and
+native expandable sections through formatting buttons above the post body.
+Authors can edit or delete a post from its full-post view.
+
+## Configure the blog
+
+1. Create a Supabase project and run `supabase/schema.sql` in its SQL editor.
+2. In Supabase Authentication, create the email/password user that will author
+   posts. Copy that user's UUID from the Users screen, then run:
+
+   ```sql
+   insert into public.blog_authors (user_id) values ('YOUR-USER-UUID');
+   ```
+
+3. Copy the project URL and anon/public key into `site-config.js`. The anon key
+   is designed to be public; never put a service-role key in this repository.
+4. Add `https://harperaust.in` as an allowed site URL in Supabase Authentication.
+
+Row-level security allows everyone to read published posts but only users
+listed in `blog_authors` to create, edit, or delete them.
+
 ## Run locally
 
 ```sh

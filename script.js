@@ -272,6 +272,15 @@ if (terminalWindow) {
     scrollOutput();
   }
 
+  window.addEventListener("terminal:message", (event) => {
+    appendLine(
+      event.detail.text,
+      event.detail.error
+        ? "terminal-line terminal-error"
+        : "terminal-line terminal-result",
+    );
+  });
+
   function showStatus(label) {
     const status = document.createElement("div");
     status.className = "terminal-status";
@@ -500,6 +509,8 @@ if (terminalWindow) {
       );
       await wait(reduceMotion.matches ? 0 : 240);
       showRetro();
+    } else if (command === "author") {
+      window.dispatchEvent(new CustomEvent("terminal:author-login"));
     } else {
       appendLine(`Unknown command: ${entered}. Type /help.`, "terminal-line terminal-error");
     }
@@ -583,7 +594,7 @@ if (terminalWindow) {
     await streamText(heading, "Harper Austin", 42);
     await streamText(
       description,
-      "CS @ Brown University. I like working on AI.",
+      "CS @ Brown University.",
       12,
     );
     const hint = document.createElement("p");

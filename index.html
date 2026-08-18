@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#d9dce3" />
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
-    <link rel="stylesheet" href="modern.css?v=27" />
+    <link rel="stylesheet" href="modern.css?v=30" />
   </head>
   <body>
     <section class="modern-stage" id="modernStage">
@@ -23,10 +23,18 @@
             <span class="traffic-light minimize" aria-hidden="true"></span>
             <span class="traffic-light maximize" aria-hidden="true"></span>
           </div>
+          <nav class="terminal-tabs" aria-label="Site sections">
+            <button class="terminal-tab is-active" type="button" data-view="terminal" aria-selected="true">
+              Terminal
+            </button>
+            <button class="terminal-tab" type="button" data-view="blog" aria-selected="false">
+              Blog
+            </button>
+          </nav>
           <p class="terminal-title">harper — zsh — 80×24</p>
         </header>
 
-        <div class="terminal-content">
+        <div class="terminal-content site-view is-active" id="terminalView">
           <div class="terminal-output" id="terminalOutput" aria-live="polite"></div>
           <div class="command-palette" id="commandPalette" role="listbox" aria-label="Available commands" hidden></div>
           <form class="terminal-prompt" id="terminalForm">
@@ -48,6 +56,34 @@
             <button type="submit" aria-label="Run command">↵</button>
           </form>
         </div>
+
+        <section class="blog-view site-view" id="blogView" aria-labelledby="blogHeading" hidden>
+          <header class="blog-header">
+            <div>
+              <p class="blog-kicker">~/writing</p>
+              <h1 id="blogHeading">Blog</h1>
+            </div>
+            <div class="blog-actions">
+              <span class="blog-author-status" id="blogAuthorStatus" hidden>Author mode</span>
+              <button class="blog-action-button" id="logoutButton" type="button" hidden>Log out</button>
+              <button class="blog-add-button" id="newPostButton" type="button" aria-label="Write a new post" hidden>+</button>
+            </div>
+          </header>
+          <div class="blog-message" id="blogMessage" role="status">Loading posts…</div>
+          <div class="blog-posts" id="blogPosts"></div>
+          <article class="blog-detail" id="blogDetail" hidden>
+            <div class="blog-detail-toolbar">
+              <button class="blog-back-button" id="blogBackButton" type="button">← All posts</button>
+              <div class="blog-detail-actions" id="blogDetailActions" hidden>
+                <button class="blog-action-button" id="editPostButton" type="button">Edit</button>
+                <button class="blog-action-button blog-delete-button" id="deletePostButton" type="button">Delete</button>
+              </div>
+            </div>
+            <time id="blogDetailDate"></time>
+            <h1 id="blogDetailTitle"></h1>
+            <div class="blog-detail-content" id="blogDetailContent"></div>
+          </article>
+        </section>
       </main>
     </section>
 
@@ -55,6 +91,58 @@
       <iframe src="retro.html?v=3" title="Harper Austin retro website"></iframe>
     </section>
 
-    <script src="script.js?v=44"></script>
+    <dialog id="authorDialog" aria-labelledby="authorDialogTitle">
+      <form class="blog-dialog-form" id="authorForm">
+        <div class="dialog-header">
+          <h2 id="authorDialogTitle">Author login</h2>
+          <button type="button" data-close-dialog="authorDialog">Close</button>
+        </div>
+        <div class="blog-form-fields">
+          <label>
+            Email
+            <input id="authorEmail" type="email" autocomplete="username" required />
+          </label>
+          <label>
+            Password
+            <input id="authorPassword" type="password" autocomplete="current-password" required />
+          </label>
+          <p class="blog-form-error" id="authorError" role="alert"></p>
+          <button class="blog-primary-button" type="submit">Log in</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="postDialog" aria-labelledby="postDialogTitle">
+      <form class="blog-dialog-form" id="postForm">
+        <div class="dialog-header">
+          <h2 id="postDialogTitle">New post</h2>
+          <button type="button" data-close-dialog="postDialog">Close</button>
+        </div>
+        <div class="blog-form-fields">
+          <input id="postId" type="hidden" />
+          <label>
+            Title
+            <input id="postTitle" type="text" maxlength="160" required />
+          </label>
+          <label>
+            Body
+            <span class="blog-format-help">Use the buttons to insert section headings and expandable sections.</span>
+            <span class="blog-format-toolbar" aria-label="Post formatting">
+              <button type="button" data-format="heading">Section heading</button>
+              <button type="button" data-format="subheading">Subheading</button>
+              <button type="button" data-format="code">Code block</button>
+              <button type="button" data-format="expandable">Expandable</button>
+            </span>
+            <textarea id="postContent" rows="12" required></textarea>
+          </label>
+          <p class="blog-form-error" id="postError" role="alert"></p>
+          <button class="blog-primary-button" id="savePostButton" type="submit">Publish post</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="site-config.js?v=1"></script>
+    <script src="blog.js?v=3"></script>
+    <script src="script.js?v=46"></script>
   </body>
 </html>
