@@ -19,9 +19,9 @@ The **Blog** tab reads published posts from Supabase. The unlisted `/author`
 terminal command opens the author login; after login, the Blog tab shows a `+`
 button for publishing posts.
 
-The post editor supports section headings, subheadings, fenced code blocks, and
-native expandable sections through formatting buttons above the post body.
-Authors can edit or delete a post from its full-post view.
+The post editor supports section headings, subheadings, fenced code blocks,
+named links, and native expandable sections through formatting buttons above
+the post body. Authors can edit or delete a post from its full-post view.
 Posts can also be saved as private drafts; Supabase row-level security only
 returns drafts to an authorized author.
 

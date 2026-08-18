@@ -163,6 +163,32 @@
     }
   }
 
+  function appendInlineContent(element, text) {
+    const linkPattern = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+    let lastIndex = 0;
+    for (const match of text.matchAll(linkPattern)) {
+      element.append(document.createTextNode(text.slice(lastIndex, match.index)));
+      try {
+        const url = new URL(match[2], window.location.origin);
+        if (!["http:", "https:", "mailto:"].includes(url.protocol)) {
+          throw new Error("Unsupported link protocol");
+        }
+        const link = document.createElement("a");
+        link.href = url.href;
+        link.textContent = match[1];
+        if (url.protocol === "http:" || url.protocol === "https:") {
+          link.target = "_blank";
+          link.rel = "noreferrer";
+        }
+        element.append(link);
+      } catch {
+        element.append(document.createTextNode(match[0]));
+      }
+      lastIndex = match.index + match[0].length;
+    }
+    element.append(document.createTextNode(text.slice(lastIndex)));
+  }
+
   function appendRichText(container, source) {
     let target = container;
     let codeElement = null;
@@ -210,7 +236,7 @@
       const element = document.createElement(
         headingMatch ? `h${Math.min(headingMatch[1].length + 1, 4)}` : "p",
       );
-      element.textContent = headingMatch ? headingMatch[2] : line;
+      appendInlineContent(element, headingMatch ? headingMatch[2] : line);
       target.append(element);
     });
   }
@@ -438,6 +464,7 @@
         heading: `# ${selectedText || "Section heading"}\n`,
         subheading: `## ${selectedText || "Subheading"}\n`,
         code: `\`\`\`js\n${selectedText || "const example = true;"}\n\`\`\`\n`,
+        link: `[${selectedText || "short name"}](https://example.com)`,
         expandable: `::: details Click to expand\n${selectedText || "Write hidden content here."}\n:::\n`,
       };
       const template = templates[button.dataset.format];
