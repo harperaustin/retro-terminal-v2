@@ -70,8 +70,27 @@ body {
 .minimal-link:focus-visible,
 .minimal-home-link:hover,
 .minimal-home-link:focus-visible {
-  color: #777;
   outline: none;
+}
+
+.ripple-character {
+  display: inline-block;
+  color: inherit;
+  transition:
+    color 220ms ease,
+    filter 260ms ease,
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: color, transform;
+}
+
+.ripple-character-space {
+  width: 0.26em;
+}
+
+.ripple-character.is-rippling {
+  color: var(--ripple-color);
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--ripple-color) 20%, transparent));
+  transform: translateY(var(--ripple-lift)) scale(1.035);
 }
 
 .blog-view {
