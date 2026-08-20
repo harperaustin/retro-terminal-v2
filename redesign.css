@@ -66,6 +66,35 @@ body {
   line-height: 1.15;
 }
 
+.minimal-about {
+  display: grid;
+  max-width: 560px;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms ease;
+}
+
+.minimal-about > div {
+  overflow: hidden;
+}
+
+.minimal-about p {
+  margin: 0;
+  color: #555;
+  font-size: clamp(17px, 2.2vw, 23px);
+  letter-spacing: -0.02em;
+  line-height: 1.45;
+}
+
+.minimal-about.is-visible {
+  grid-template-rows: 1fr;
+  margin-top: clamp(30px, 5vh, 52px);
+  opacity: 1;
+}
+
 .minimal-link:hover,
 .minimal-link:focus-visible,
 .minimal-home-link:hover,
@@ -162,5 +191,11 @@ dialog {
 
   .blog-header {
     align-items: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .minimal-about {
+    transition: none;
   }
 }

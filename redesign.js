@@ -4,6 +4,34 @@
     window.dispatchEvent(new CustomEvent("terminal:author-login"));
   });
 
+  const aboutLink = document.querySelector('a[href="#about"]');
+  const aboutPanel = document.querySelector("#aboutPanel");
+
+  function setAboutOpen(isOpen) {
+    aboutLink.setAttribute("aria-expanded", String(isOpen));
+    aboutPanel.classList.toggle("is-visible", isOpen);
+    aboutPanel.setAttribute("aria-hidden", String(!isOpen));
+  }
+
+  aboutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    const isOpen = !aboutPanel.classList.contains("is-visible");
+    if (isOpen) {
+      window.history.pushState(null, "", "#about");
+    } else {
+      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
+    setAboutOpen(isOpen);
+  });
+
+  window.addEventListener("hashchange", () => {
+    setAboutOpen(window.location.hash === "#about");
+  });
+  window.addEventListener("popstate", () => {
+    setAboutOpen(window.location.hash === "#about");
+  });
+  setAboutOpen(window.location.hash === "#about");
+
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return;
   }
