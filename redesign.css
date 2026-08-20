@@ -104,10 +104,40 @@ body {
   border-color: #d8d8d8;
 }
 
-.minimal-home-link {
+.blog-home-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
   margin-bottom: 18px;
-  color: #747474;
+  color: #aaa;
+  cursor: pointer;
   font-size: 14px;
+  opacity: 0.55;
+  transition: opacity 180ms ease;
+}
+
+.blog-home-link:hover,
+.blog-home-link:focus-visible {
+  opacity: 0.9;
+}
+
+.author-login-hotspot {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+  opacity: 0;
+}
+
+.author-login-hotspot:focus-visible {
+  outline: 1px solid #ddd;
+  outline-offset: -8px;
+  opacity: 1;
 }
 
 .blog-header h1 {

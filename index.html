@@ -8,7 +8,7 @@
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="stylesheet" href="modern.css?v=33" />
-    <link rel="stylesheet" href="redesign.css?v=3" />
+    <link rel="stylesheet" href="redesign.css?v=4" />
   </head>
   <body>
     <main class="minimal-shell">
@@ -27,8 +27,8 @@
       <section class="blog-view site-view" id="blogView" aria-labelledby="blogHeading" hidden>
         <header class="blog-header">
           <div>
-            <button class="minimal-home-link terminal-tab" type="button" data-view="terminal">
-              Harper Austin
+            <button class="blog-home-link terminal-tab" type="button" data-view="terminal">
+              ← back
             </button>
             <h1 id="blogHeading">Blog</h1>
           </div>
@@ -55,6 +55,12 @@
           <h1 id="blogDetailTitle"></h1>
           <div class="blog-detail-content" id="blogDetailContent"></div>
         </article>
+        <button
+          class="author-login-hotspot"
+          id="authorLoginHotspot"
+          type="button"
+          aria-label="Author login"
+        ></button>
       </section>
     </main>
 
@@ -116,6 +122,6 @@
 
     <script src="site-config.js?v=1"></script>
     <script src="blog.js?v=7"></script>
-    <script src="redesign.js?v=4"></script>
+    <script src="redesign.js?v=5"></script>
   </body>
 </html>

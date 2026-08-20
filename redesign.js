@@ -1,4 +1,9 @@
 (() => {
+  const authorLoginHotspot = document.querySelector("#authorLoginHotspot");
+  authorLoginHotspot.addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("terminal:author-login"));
+  });
+
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return;
   }
