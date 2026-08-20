@@ -8,11 +8,11 @@
     b: ["8", "6"],
     e: ["3", "c"],
     g: ["9", "q"],
-    h: ["#", "^", "n"],
+    h: ["^", "n"],
     i: ["!", "|", "1"],
     l: ["1", "|", "/"],
     n: ["^", "h", "r"],
-    o: ["0", "°", "()"],
+    o: ["0", "°"],
     p: ["?", "9"],
     r: ["2", "k"],
     s: ["$", "5"],
@@ -26,6 +26,7 @@
     const label = element.textContent;
     const characters = [];
     const timers = new Map();
+    let lastRippleAt = 0;
 
     element.classList.add("ripple-text");
     element.setAttribute("aria-label", label);
@@ -50,6 +51,11 @@
     });
 
     function startRipple(centerIndex) {
+      const now = Date.now();
+      if (now - lastRippleAt < 110) {
+        return;
+      }
+      lastRippleAt = now;
       rippleCount += 1;
       characters.forEach((span, index) => {
         const original = label[index];
@@ -68,15 +74,15 @@
           const choice = alternatives[(rippleCount + index) % alternatives.length];
           span.textContent = choice;
           span.style.setProperty("--ripple-color", colors[(rippleCount + index) % colors.length]);
-          span.style.setProperty("--ripple-lift", `${distance % 2 === 0 ? -1 : 1}px`);
+          span.style.setProperty("--ripple-lift", `${distance % 2 === 0 ? -0.5 : 0.5}px`);
           span.classList.add("is-rippling");
 
           const endTimer = window.setTimeout(() => {
             span.textContent = original;
             span.classList.remove("is-rippling");
-          }, 240 + distance * 18);
+          }, 280 + distance * 20);
           timers.set(span, [endTimer]);
-        }, distance * 48);
+        }, distance * 56);
         timers.set(span, [startTimer]);
       });
     }
