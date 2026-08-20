@@ -608,6 +608,9 @@
         expandable: `::: details Click to expand\n${selectedText || "Write hidden content here."}\n:::\n`,
       };
       const template = templates[button.dataset.format];
+      if (!template) {
+        return;
+      }
       postContent.setRangeText(template, start, end, "end");
       postContent.focus();
     });
