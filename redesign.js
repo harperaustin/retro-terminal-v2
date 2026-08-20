@@ -12,7 +12,7 @@
     i: ["!", "|", "1"],
     l: ["1", "|", "/"],
     n: ["^", "h", "r"],
-    o: ["0", "°"],
+    o: ["0", "°", "()"],
     p: ["?", "9"],
     r: ["2", "k"],
     s: ["$", "5"],
@@ -26,7 +26,6 @@
     const label = element.textContent;
     const characters = [];
     const timers = new Map();
-    let lastRippleAt = 0;
 
     element.classList.add("ripple-text");
     element.setAttribute("aria-label", label);
@@ -46,32 +45,25 @@
       }
     });
 
-    characters.forEach((span) => {
-      if (!span.classList.contains("ripple-character-space")) {
-        span.style.width = `${span.getBoundingClientRect().width}px`;
-      }
-    });
-
     element.addEventListener("focus", () => {
       startRipple(Math.floor(characters.length / 2));
     });
 
     function startRipple(centerIndex) {
-      const now = Date.now();
-      if (now - lastRippleAt < 160) {
-        return;
-      }
-      lastRippleAt = now;
       rippleCount += 1;
       characters.forEach((span, index) => {
         const original = label[index];
         const alternatives = substitutions[original.toLowerCase()];
-        const distance = Math.abs(index - centerIndex);
-        const rippleRadius = characters.length <= 5 ? characters.length : 4;
-        if (!alternatives || distance > rippleRadius || timers.has(span)) {
+        if (!alternatives) {
           return;
         }
 
+        const existingTimers = timers.get(span) || [];
+        existingTimers.forEach(window.clearTimeout);
+        span.classList.remove("is-rippling");
+        span.textContent = original;
+
+        const distance = Math.abs(index - centerIndex);
         const startTimer = window.setTimeout(() => {
           const choice = alternatives[(rippleCount + index) % alternatives.length];
           span.textContent = choice;
@@ -82,10 +74,9 @@
           const endTimer = window.setTimeout(() => {
             span.textContent = original;
             span.classList.remove("is-rippling");
-            timers.delete(span);
-          }, 330 + distance * 24);
+          }, 240 + distance * 18);
           timers.set(span, [endTimer]);
-        }, distance * 64);
+        }, distance * 48);
         timers.set(span, [startTimer]);
       });
     }
