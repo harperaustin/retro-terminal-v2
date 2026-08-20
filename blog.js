@@ -233,10 +233,61 @@
     element.append(document.createTextNode(text.slice(lastIndex)));
   }
 
+  function parseTableRow(line) {
+    return line
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((cell) => cell.trim());
+  }
+
+  function isTableDivider(line) {
+    const cells = parseTableRow(line);
+    return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+  }
+
+  function appendTable(container, lines, startIndex) {
+    const tableWrapper = document.createElement("div");
+    const table = document.createElement("table");
+    const tableHead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const headers = parseTableRow(lines[startIndex]);
+
+    headers.forEach((header) => {
+      const cell = document.createElement("th");
+      appendInlineContent(cell, header);
+      headerRow.append(cell);
+    });
+    tableHead.append(headerRow);
+    table.append(tableHead);
+
+    const tableBody = document.createElement("tbody");
+    let nextIndex = startIndex + 2;
+    while (nextIndex < lines.length && lines[nextIndex].includes("|") && lines[nextIndex].trim()) {
+      const row = document.createElement("tr");
+      const cells = parseTableRow(lines[nextIndex]);
+      headers.forEach((_, cellIndex) => {
+        const cell = document.createElement("td");
+        appendInlineContent(cell, cells[cellIndex] || "");
+        row.append(cell);
+      });
+      tableBody.append(row);
+      nextIndex += 1;
+    }
+    table.append(tableBody);
+    tableWrapper.className = "blog-table-wrapper";
+    tableWrapper.append(table);
+    container.append(tableWrapper);
+    return nextIndex - 1;
+  }
+
   function appendRichText(container, source) {
     let target = container;
     let codeElement = null;
-    source.split(/\r?\n/).forEach((line) => {
+    const lines = source.split(/\r?\n/);
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const line = lines[lineIndex];
       const codeFenceMatch = line.match(/^```([\w-]*)\s*$/);
       if (codeFenceMatch) {
         if (codeElement) {
@@ -250,11 +301,11 @@
           pre.append(codeElement);
           target.append(pre);
         }
-        return;
+        continue;
       }
       if (codeElement) {
         codeElement.textContent += `${line}\n`;
-        return;
+        continue;
       }
       const expandableMatch = line.match(/^:::\s*(?:details|expandable)\s+(.+)$/i);
       if (expandableMatch) {
@@ -266,14 +317,22 @@
         details.append(summary, content);
         container.append(details);
         target = content;
-        return;
+        continue;
       }
       if (/^:::\s*$/.test(line)) {
         target = container;
-        return;
+        continue;
       }
       if (!line.trim()) {
-        return;
+        continue;
+      }
+      if (
+        line.includes("|")
+        && lineIndex + 1 < lines.length
+        && isTableDivider(lines[lineIndex + 1])
+      ) {
+        lineIndex = appendTable(target, lines, lineIndex);
+        continue;
       }
 
       const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
@@ -282,7 +341,7 @@
       );
       appendInlineContent(element, headingMatch ? headingMatch[2] : line);
       target.append(element);
-    });
+    }
   }
 
   function openPost(post) {
@@ -542,7 +601,9 @@
       const templates = {
         heading: `# ${selectedText || "Section heading"}\n`,
         subheading: `## ${selectedText || "Subheading"}\n`,
-        code: `\`\`\`js\n${selectedText || "const example = true;"}\n\`\`\`\n`,
+        "code-js": `\`\`\`js\n${selectedText || "const example = true;"}\n\`\`\`\n`,
+        "code-python": `\`\`\`python\n${selectedText || "example = True"}\n\`\`\`\n`,
+        table: `| Column 1 | Column 2 |\n| --- | --- |\n| ${selectedText || "Value 1"} | Value 2 |\n`,
         link: `[${selectedText || "short name"}](https://example.com)`,
         expandable: `::: details Click to expand\n${selectedText || "Write hidden content here."}\n:::\n`,
       };

@@ -476,6 +476,29 @@ a {
   white-space: pre;
 }
 
+.blog-table-wrapper {
+  margin: 24px 0;
+  overflow-x: auto;
+}
+
+.blog-detail-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.blog-detail-content th,
+.blog-detail-content td {
+  padding: 10px 12px;
+  border: 1px solid var(--button-border);
+  text-align: left;
+}
+
+.blog-detail-content th {
+  background: color-mix(in srgb, var(--window) 78%, var(--button));
+  font-weight: 600;
+}
+
 .blog-detail-content summary {
   padding: 14px 16px;
   color: var(--link);
