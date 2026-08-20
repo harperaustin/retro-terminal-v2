@@ -19,7 +19,7 @@
     t: ["+", "7"],
     u: ["v", "µ"],
   };
-  const colors = ["#7186b8", "#9a7188", "#648b82", "#a07f58", "#7e719f"];
+  const colors = ["#f4c430", "#ff9f1c", "#ff5a36", "#e83f6f", "#9b5de5"];
   let rippleCount = 0;
 
   document.querySelectorAll(".minimal-home h1, .minimal-link").forEach((element) => {
