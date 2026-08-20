@@ -4,95 +4,58 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Harper Austin's personal website." />
-    <meta name="theme-color" content="#d9dce3" />
+    <meta name="theme-color" content="#ffffff" />
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="stylesheet" href="modern.css?v=33" />
+    <link rel="stylesheet" href="redesign.css?v=1" />
   </head>
   <body>
-    <section class="modern-stage" id="modernStage">
-      <main class="terminal-window">
-        <header class="terminal-titlebar">
-          <div class="traffic-lights">
-            <button
-              class="traffic-light close"
-              id="openFun"
-              type="button"
-              aria-label="Open the retro page"
-            ></button>
-            <span class="traffic-light minimize" aria-hidden="true"></span>
-            <span class="traffic-light maximize" aria-hidden="true"></span>
+    <main class="minimal-shell">
+      <section class="minimal-home site-view is-active" id="terminalView">
+        <h1>Harper Austin</h1>
+        <nav class="minimal-links" aria-label="Harper Austin links">
+          <button class="minimal-link terminal-tab" type="button" data-view="blog">blog</button>
+          <a class="minimal-link" href="https://www.linkedin.com/in/harper-austin-523743276/">linkedin</a>
+          <a class="minimal-link" href="https://github.com/harperaustin">github</a>
+          <a class="minimal-link" href="#music">music</a>
+          <a class="minimal-link" href="#photography">photography</a>
+        </nav>
+      </section>
+
+      <section class="blog-view site-view" id="blogView" aria-labelledby="blogHeading" hidden>
+        <header class="blog-header">
+          <div>
+            <button class="minimal-home-link terminal-tab" type="button" data-view="terminal">
+              Harper Austin
+            </button>
+            <h1 id="blogHeading">Blog</h1>
           </div>
-          <nav class="terminal-tabs" aria-label="Site sections">
-            <button class="terminal-tab is-active" type="button" data-view="terminal" aria-selected="true">
-              Terminal
-            </button>
-            <button class="terminal-tab" type="button" data-view="blog" aria-selected="false">
-              Blog
-            </button>
-          </nav>
-          <p class="terminal-title">harper — zsh — 80×24</p>
+          <div class="blog-actions">
+            <span class="blog-author-status" id="blogAuthorStatus" hidden>Author mode</span>
+            <button class="blog-action-button" id="logoutButton" type="button" hidden>Log out</button>
+            <button class="blog-add-button" id="newPostButton" type="button" aria-label="Write a new post" hidden>+</button>
+          </div>
         </header>
-
-        <div class="terminal-content site-view is-active" id="terminalView">
-          <div class="terminal-output" id="terminalOutput" aria-live="polite"></div>
-          <div class="command-palette" id="commandPalette" role="listbox" aria-label="Available commands" hidden></div>
-          <form class="terminal-prompt" id="terminalForm">
-            <label class="sr-only" for="terminalInput">Enter a command</label>
-            <span aria-hidden="true">❯</span>
-            <input
-              id="terminalInput"
-              type="text"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              placeholder="Type / for commands"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-controls="commandPalette"
-              aria-expanded="false"
-            />
-            <span class="command-hint" aria-hidden="true"><kbd>/</kbd> commands</span>
-            <button type="submit" aria-label="Run command">↵</button>
-          </form>
-        </div>
-
-        <section class="blog-view site-view" id="blogView" aria-labelledby="blogHeading" hidden>
-          <header class="blog-header">
-            <div>
-              <p class="blog-kicker">~/writing</p>
-              <h1 id="blogHeading">Blog</h1>
-            </div>
-            <div class="blog-actions">
-              <span class="blog-author-status" id="blogAuthorStatus" hidden>Author mode</span>
-              <button class="blog-action-button" id="logoutButton" type="button" hidden>Log out</button>
-              <button class="blog-add-button" id="newPostButton" type="button" aria-label="Write a new post" hidden>+</button>
-            </div>
-          </header>
-          <div class="blog-message" id="blogMessage" role="status">Loading posts…</div>
-          <div class="blog-posts" id="blogPosts"></div>
-          <article class="blog-detail" id="blogDetail" hidden>
-            <div class="blog-detail-toolbar">
-              <button class="blog-back-button" id="blogBackButton" type="button">← All posts</button>
-              <div class="blog-detail-controls">
-                <button class="blog-action-button" id="copyPostLinkButton" type="button">Copy link</button>
-                <div class="blog-detail-actions" id="blogDetailActions" hidden>
-                  <button class="blog-action-button" id="editPostButton" type="button">Edit</button>
-                  <button class="blog-action-button blog-delete-button" id="deletePostButton" type="button">Delete</button>
-                </div>
+        <div class="blog-message" id="blogMessage" role="status">Loading posts…</div>
+        <div class="blog-posts" id="blogPosts"></div>
+        <article class="blog-detail" id="blogDetail" hidden>
+          <div class="blog-detail-toolbar">
+            <button class="blog-back-button" id="blogBackButton" type="button">← All posts</button>
+            <div class="blog-detail-controls">
+              <button class="blog-action-button" id="copyPostLinkButton" type="button">Copy link</button>
+              <div class="blog-detail-actions" id="blogDetailActions" hidden>
+                <button class="blog-action-button" id="editPostButton" type="button">Edit</button>
+                <button class="blog-action-button blog-delete-button" id="deletePostButton" type="button">Delete</button>
               </div>
             </div>
-            <time id="blogDetailDate"></time>
-            <h1 id="blogDetailTitle"></h1>
-            <div class="blog-detail-content" id="blogDetailContent"></div>
-          </article>
-        </section>
-      </main>
-    </section>
-
-    <section class="retro-stage" id="retroStage" aria-label="Retro website" aria-hidden="true" inert>
-      <iframe src="retro.html?v=3" title="Harper Austin retro website"></iframe>
-    </section>
+          </div>
+          <time id="blogDetailDate"></time>
+          <h1 id="blogDetailTitle"></h1>
+          <div class="blog-detail-content" id="blogDetailContent"></div>
+        </article>
+      </section>
+    </main>
 
     <dialog id="authorDialog" aria-labelledby="authorDialogTitle">
       <form class="blog-dialog-form" id="authorForm">
@@ -152,6 +115,5 @@
 
     <script src="site-config.js?v=1"></script>
     <script src="blog.js?v=7"></script>
-    <script src="script.js?v=46"></script>
   </body>
 </html>
