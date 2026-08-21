@@ -841,12 +841,16 @@
 
       const image = document.createElement("img");
       image.alt = photo.alt_text || "";
-      image.loading = "lazy";
+      image.loading = window.innerWidth <= 560 ? "eager" : "lazy";
       image.addEventListener("load", () => {
         figure.dataset.orientation = image.naturalHeight > image.naturalWidth
           ? "portrait"
           : "landscape";
         sizePhotoCard(figure, image);
+        arrangePhotoSlides();
+      });
+      image.addEventListener("error", () => {
+        figure.dataset.orientation = "landscape";
         arrangePhotoSlides();
       });
       image.src = photo.image_url;
