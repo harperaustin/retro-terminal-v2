@@ -753,22 +753,60 @@
     card.style.gridRowEnd = `span ${rowSpan}`;
   }
 
+  function arrangePhotoSlides() {
+    photoGallery.querySelectorAll(".photo-slide").forEach((slide) => {
+      slide.replaceWith(...slide.children);
+    });
+    const cards = Array.from(photoGallery.querySelectorAll(":scope > .photo-card"));
+    if (!cards.length || cards.some((card) => !card.dataset.orientation)) {
+      return;
+    }
+
+    const slides = [];
+    let pendingLandscape = null;
+    cards.forEach((card) => {
+      if (card.dataset.orientation === "portrait") {
+        const slide = document.createElement("div");
+        slide.className = "photo-slide photo-slide-portrait";
+        slide.append(card);
+        slides.push(slide);
+      } else if (pendingLandscape) {
+        const slide = document.createElement("div");
+        slide.className = "photo-slide photo-slide-landscape";
+        slide.append(pendingLandscape, card);
+        slides.push(slide);
+        pendingLandscape = null;
+      } else {
+        pendingLandscape = card;
+      }
+    });
+    if (pendingLandscape) {
+      const slide = document.createElement("div");
+      slide.className = "photo-slide photo-slide-landscape";
+      slide.append(pendingLandscape);
+      slides.push(slide);
+    }
+    photoGallery.replaceChildren(...slides);
+    photoGallery.scrollLeft = 0;
+    updatePhotoCarouselStatus();
+  }
+
   function updatePhotoCarouselStatus() {
-    const cards = Array.from(photoGallery.querySelectorAll(".photo-card"));
-    const showStatus = window.innerWidth <= 560 && cards.length > 1;
+    const slides = Array.from(photoGallery.querySelectorAll(".photo-slide"));
+    const showStatus = window.innerWidth <= 560 && slides.length > 1;
     photoCarouselStatus.hidden = !showStatus;
     if (!showStatus) {
       return;
     }
-    const firstOffset = cards[0].offsetLeft;
-    const activeIndex = cards.reduce((closestIndex, card, index) => {
+    const firstOffset = slides[0].offsetLeft;
+    const activeIndex = slides.reduce((closestIndex, slide, index) => {
       const currentDistance = Math.abs(
-        cards[closestIndex].offsetLeft - firstOffset - photoGallery.scrollLeft,
+        slides[closestIndex].offsetLeft - firstOffset - photoGallery.scrollLeft,
       );
-      const nextDistance = Math.abs(card.offsetLeft - firstOffset - photoGallery.scrollLeft);
+      const nextDistance = Math.abs(slide.offsetLeft - firstOffset - photoGallery.scrollLeft);
       return nextDistance < currentDistance ? index : closestIndex;
     }, 0);
-    photoCarouselStatus.textContent = `${activeIndex + 1} / ${cards.length}`;
+    photoCarouselStatus.textContent = `${activeIndex + 1} / ${slides.length}`;
   }
 
   function renderPhotos(nextPhotos) {
@@ -804,7 +842,13 @@
       const image = document.createElement("img");
       image.alt = photo.alt_text || "";
       image.loading = "lazy";
-      image.addEventListener("load", () => sizePhotoCard(figure, image));
+      image.addEventListener("load", () => {
+        figure.dataset.orientation = image.naturalHeight > image.naturalWidth
+          ? "portrait"
+          : "landscape";
+        sizePhotoCard(figure, image);
+        arrangePhotoSlides();
+      });
       image.src = photo.image_url;
       previewButton.append(image);
       figure.append(previewButton);
@@ -825,10 +869,13 @@
       }
       photoGallery.append(figure);
       if (image.complete) {
+        figure.dataset.orientation = image.naturalHeight > image.naturalWidth
+          ? "portrait"
+          : "landscape";
         sizePhotoCard(figure, image);
       }
     });
-    window.requestAnimationFrame(updatePhotoCarouselStatus);
+    window.requestAnimationFrame(arrangePhotoSlides);
   }
 
   async function loadPhotos() {
