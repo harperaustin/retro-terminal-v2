@@ -82,7 +82,6 @@
   const photoOrderForm = document.querySelector("#photoOrderForm");
   const photoOrderList = document.querySelector("#photoOrderList");
   const photoOrderError = document.querySelector("#photoOrderError");
-  const noHeroPhoto = document.querySelector("#noHeroPhoto");
   const photoLightbox = document.querySelector("#photoLightbox");
   const photoLightboxImage = document.querySelector("#photoLightboxImage");
   const photoLightboxCaption = document.querySelector("#photoLightboxCaption");
@@ -150,7 +149,7 @@
     photoAuthorStatus.hidden = !isVerifiedAuthor;
     photoLogoutButton.hidden = !isVerifiedAuthor;
     newPhotoButton.hidden = !isVerifiedAuthor;
-    arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 2;
+    arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 3;
     renderPhotos(photos);
     aboutAuthorActions.hidden = !isVerifiedAuthor;
   }
@@ -802,8 +801,17 @@
       return;
     }
 
-    const heroCard = cards.find((card) => card.dataset.hero === "true");
-    const remainingCards = heroCard ? cards.filter((card) => card !== heroCard) : cards;
+    const pinnedCards = [0, 1, 2].map((slot) => (
+      cards.find((card) => Number(card.dataset.pinSlot) === slot)
+    ));
+    const hasPinnedTrio = (
+      pinnedCards.every(Boolean)
+      && pinnedCards[0].dataset.orientation === "portrait"
+      && pinnedCards.slice(1).every((card) => card.dataset.orientation === "landscape")
+    );
+    const remainingCards = hasPinnedTrio
+      ? cards.filter((card) => !pinnedCards.includes(card))
+      : cards;
     const portraits = remainingCards.filter((card) => card.dataset.orientation === "portrait");
     const landscapes = remainingCards.filter((card) => card.dataset.orientation === "landscape");
     const groups = [];
@@ -824,10 +832,13 @@
       groupIndex += 1;
     }
 
-    if (heroCard) {
+    if (hasPinnedTrio) {
       createGroup(
-        "photo-group-hero",
-        [createSlide("photo-slide-full", [heroCard])],
+        "photo-group-trio-a photo-group-pinned",
+        [
+          createSlide("photo-slide-portrait", [pinnedCards[0]]),
+          createSlide("photo-slide-landscape", pinnedCards.slice(1)),
+        ],
       );
     }
 
@@ -900,7 +911,7 @@
     photos = nextPhotos;
     photoGallery.replaceChildren();
     shufflePhotosButton.hidden = photos.length < 2;
-    arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 2;
+    arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 3;
     if (photos.length === 0) {
       setStatus(photoMessage, "No photographs yet.");
       photoMessage.hidden = false;
@@ -909,11 +920,19 @@
     setStatus(photoMessage, "");
     photoMessage.hidden = true;
     photoGallery.scrollLeft = 0;
-    const orderedPhotos = shouldShuffle ? shuffled(photos) : photos;
+    const pinnedPhotos = photos.filter((photo) => (
+      Number.isInteger(photo.display_order) && photo.display_order >= 0 && photo.display_order < 3
+    ));
+    const unpinnedPhotos = photos.filter((photo) => !pinnedPhotos.includes(photo));
+    const orderedPhotos = shouldShuffle
+      ? [...pinnedPhotos, ...shuffled(unpinnedPhotos)]
+      : photos;
     orderedPhotos.forEach((photo, index) => {
       const figure = document.createElement("figure");
       figure.className = "photo-card";
-      figure.dataset.hero = String(Boolean(photo.is_hero));
+      if (pinnedPhotos.includes(photo)) {
+        figure.dataset.pinSlot = photo.display_order;
+      }
       figure.style.setProperty("--photo-delay", `${Math.min(index * 55, 440)}ms`);
       const dimensions = photoDimensions.get(photo.id);
       const hasKnownDimensions = Boolean(dimensions);
@@ -983,7 +1002,14 @@
 
   function renderPhotoOrderEditor() {
     photoOrderList.replaceChildren();
-    noHeroPhoto.checked = !photos.some((photo) => photo.is_hero);
+
+    function updateSlotLabels() {
+      const slotLabels = ["pinned portrait", "pinned landscape 1", "pinned landscape 2"];
+      Array.from(photoOrderList.children).forEach((item, index) => {
+        item.querySelector(".photo-order-pin").textContent = slotLabels[index] || "random";
+      });
+    }
+
     photos.forEach((photo, index) => {
       const item = document.createElement("div");
       item.className = "photo-order-item";
@@ -998,14 +1024,8 @@
       const label = document.createElement("span");
       label.textContent = photo.caption || photo.alt_text || `photograph ${index + 1}`;
 
-      const heroLabel = document.createElement("label");
-      heroLabel.className = "photo-order-hero";
-      const heroInput = document.createElement("input");
-      heroInput.type = "radio";
-      heroInput.name = "heroPhoto";
-      heroInput.value = photo.id;
-      heroInput.checked = Boolean(photo.is_hero);
-      heroLabel.append(heroInput, " hero");
+      const pinLabel = document.createElement("span");
+      pinLabel.className = "photo-order-pin";
 
       const buttons = document.createElement("div");
       buttons.className = "photo-order-buttons";
@@ -1017,6 +1037,7 @@
         const previousItem = item.previousElementSibling;
         if (previousItem) {
           photoOrderList.insertBefore(item, previousItem);
+          updateSlotLabels();
         }
       });
       const downButton = document.createElement("button");
@@ -1027,6 +1048,7 @@
         const nextItem = item.nextElementSibling;
         if (nextItem) {
           photoOrderList.insertBefore(nextItem, item);
+          updateSlotLabels();
         }
       });
       buttons.append(upButton, downButton);
@@ -1036,6 +1058,7 @@
       });
       item.addEventListener("dragend", () => {
         item.classList.remove("is-dragging");
+        updateSlotLabels();
       });
       item.addEventListener("dragover", (event) => {
         event.preventDefault();
@@ -1051,17 +1074,14 @@
         );
       });
 
-      item.append(image, label, heroLabel, buttons);
+      item.append(image, label, pinLabel, buttons);
       photoOrderList.append(item);
     });
+    updateSlotLabels();
   }
 
   function sortPhotos(nextPhotos) {
-    return [...nextPhotos].sort((first, second) => {
-      const heroDifference = Number(Boolean(second.is_hero)) - Number(Boolean(first.is_hero));
-      if (heroDifference) {
-        return heroDifference;
-      }
+    const orderedPhotos = [...nextPhotos].sort((first, second) => {
       const firstOrder = first.display_order ?? Number.MAX_SAFE_INTEGER;
       const secondOrder = second.display_order ?? Number.MAX_SAFE_INTEGER;
       if (firstOrder !== secondOrder) {
@@ -1070,6 +1090,16 @@
       const dateDifference = new Date(second.created_at) - new Date(first.created_at);
       return dateDifference || Number(second.id) - Number(first.id);
     });
+    const pinnedPhotos = [0, 1, 2].map((slot) => (
+      orderedPhotos.find((photo) => photo.display_order === slot)
+    ));
+    if (!pinnedPhotos.every(Boolean)) {
+      return shuffled(orderedPhotos);
+    }
+    return [
+      ...pinnedPhotos,
+      ...shuffled(orderedPhotos.filter((photo) => !pinnedPhotos.includes(photo))),
+    ];
   }
 
   async function preloadPhotos(nextPhotos) {
@@ -1335,8 +1365,25 @@
       return;
     }
     const photoIds = Array.from(photoOrderList.children, (item) => Number(item.dataset.photoId));
-    const selectedHero = photoOrderForm.querySelector('input[name="heroPhoto"]:checked');
-    const heroId = selectedHero?.value ? Number(selectedHero.value) : null;
+    const pinnedPhotos = photoIds.slice(0, 3).map((id) => (
+      photos.find((photo) => Number(photo.id) === id)
+    ));
+    const pinnedDimensions = pinnedPhotos.map((photo) => photoDimensions.get(photo?.id));
+    if (
+      !pinnedDimensions[0]
+      || pinnedDimensions[0].height <= pinnedDimensions[0].width
+    ) {
+      photoOrderError.textContent = "The first pinned photograph must be portrait.";
+      return;
+    }
+    if (
+      pinnedDimensions.slice(1).some((dimensions) => (
+        !dimensions || dimensions.width < dimensions.height
+      ))
+    ) {
+      photoOrderError.textContent = "The second and third pinned photographs must be landscape.";
+      return;
+    }
     const submitButton = photoOrderForm.querySelector('[type="submit"]');
     photoOrderError.textContent = "";
     submitButton.disabled = true;
@@ -1346,7 +1393,7 @@
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ photo_ids: photoIds, hero_id: heroId }),
+          body: JSON.stringify({ photo_ids: photoIds, hero_id: null }),
         },
         true,
       );

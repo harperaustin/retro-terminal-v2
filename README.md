@@ -33,8 +33,9 @@ streaming platforms. Authorized authors can import release names and cover art
 from Spotify, edit the metadata, or upload cover artwork directly.
 
 The **Photography** page presents uploaded images in a responsive editorial
-collage. Its layout is stable across visits, with a manual shuffle control,
-full-size viewer, and upload controls for authorized authors.
+collage. Authors can pin an opening portrait-and-landscape trio; the remaining
+images reshuffle on each visit. The gallery also includes a manual shuffle
+control, full-size viewer, and upload controls for authorized authors.
 
 The homepage About text is also editable by an authorized author through the
 same discreet login flow.
