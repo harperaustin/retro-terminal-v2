@@ -737,6 +737,19 @@
     (photo ? photoAltText : photoFile).focus();
   }
 
+  function sizePhotoCard(card, image) {
+    if (!image.naturalWidth || !image.naturalHeight || window.innerWidth <= 560) {
+      card.style.removeProperty("grid-row-end");
+      return;
+    }
+    const galleryStyles = window.getComputedStyle(photoGallery);
+    const rowHeight = Number.parseFloat(galleryStyles.gridAutoRows);
+    const rowGap = Number.parseFloat(galleryStyles.rowGap);
+    const imageHeight = card.clientWidth * (image.naturalHeight / image.naturalWidth);
+    const rowSpan = Math.ceil((imageHeight + rowGap) / (rowHeight + rowGap));
+    card.style.gridRowEnd = `span ${rowSpan}`;
+  }
+
   function renderPhotos(nextPhotos) {
     if (!photosLoaded) {
       return;
@@ -764,9 +777,10 @@
       previewButton.addEventListener("click", () => openPhotoLightbox(photo));
 
       const image = document.createElement("img");
-      image.src = photo.image_url;
       image.alt = photo.alt_text;
       image.loading = "lazy";
+      image.addEventListener("load", () => sizePhotoCard(figure, image));
+      image.src = photo.image_url;
       previewButton.append(image);
       figure.append(previewButton);
 
@@ -785,6 +799,9 @@
         figure.append(editButton);
       }
       photoGallery.append(figure);
+      if (image.complete) {
+        sizePhotoCard(figure, image);
+      }
     });
   }
 
@@ -807,6 +824,16 @@
       photoMessage.textContent = `Could not load photographs: ${error.message}`;
     }
   }
+
+  let photoResizeTimer;
+  window.addEventListener("resize", () => {
+    window.clearTimeout(photoResizeTimer);
+    photoResizeTimer = window.setTimeout(() => {
+      photoGallery.querySelectorAll(".photo-card").forEach((card) => {
+        sizePhotoCard(card, card.querySelector("img"));
+      });
+    }, 120);
+  });
 
   async function openAuthorLogin() {
     if (!isConfigured) {
