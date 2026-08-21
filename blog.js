@@ -104,6 +104,7 @@
   let releasesLoaded = false;
   let releases = [];
   let photosLoaded = false;
+  let photosLoadPromise = null;
   let photos = [];
   let aboutContentExists = false;
   const photoDimensions = new Map();
@@ -1179,28 +1180,37 @@
     await Promise.all(Array.from({ length: concurrency }, preloadNext));
   }
 
-  async function loadPhotos() {
-    photosLoaded = true;
-    if (!isConfigured) {
-      setStatus(photoMessage, "Photography setup is not complete yet.");
-      return;
+  function loadPhotos() {
+    if (photosLoadPromise) {
+      return photosLoadPromise;
     }
-    photoMessage.hidden = false;
-    setStatus(photoMessage, "loading...", true);
-    try {
-      const nextPhotos = await api(
-        "/rest/v1/photography_images?select=*&order=created_at.desc,id.desc",
-        {},
-        isVerifiedAuthor,
-      );
-      photoDimensions.clear();
-      const sortedPhotos = sortPhotos(nextPhotos);
-      await preloadPhotos(sortedPhotos);
-      renderPhotos(sortedPhotos);
-    } catch (error) {
-      console.error("Could not load photographs:", error);
-      setStatus(photoMessage, "Could not load photographs. Please refresh and try again.");
-    }
+    photosLoadPromise = (async () => {
+      if (!isConfigured) {
+        setStatus(photoMessage, "Photography setup is not complete yet.");
+        return;
+      }
+      photoMessage.hidden = false;
+      setStatus(photoMessage, "loading...", true);
+      try {
+        const nextPhotos = await api(
+          "/rest/v1/photography_images?select=*&order=created_at.desc,id.desc",
+          {},
+          isVerifiedAuthor,
+        );
+        photoDimensions.clear();
+        const sortedPhotos = sortPhotos(nextPhotos);
+        await preloadPhotos(sortedPhotos);
+        photosLoaded = true;
+        renderPhotos(sortedPhotos);
+      } catch (error) {
+        photosLoaded = false;
+        console.error("Could not load photographs:", error);
+        setStatus(photoMessage, "Could not load photographs. Please refresh and try again.");
+      }
+    })().finally(() => {
+      photosLoadPromise = null;
+    });
+    return photosLoadPromise;
   }
 
   let photoResizeTimer;
