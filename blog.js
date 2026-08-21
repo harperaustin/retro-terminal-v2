@@ -802,7 +802,6 @@
       slides.push(slide);
     }
     photoGallery.replaceChildren(...slides);
-    photoGallery.scrollLeft = 0;
     updatePhotoCarouselStatus();
   }
 
@@ -846,6 +845,7 @@
       figure.dataset.layout = layouts[index % layouts.length];
       figure.style.setProperty("--photo-delay", `${Math.min(index * 55, 440)}ms`);
       const dimensions = photoDimensions.get(photo.id);
+      const hasKnownDimensions = Boolean(dimensions);
       if (dimensions) {
         figure.dataset.orientation = dimensions.height > dimensions.width
           ? "portrait"
@@ -873,11 +873,15 @@
           ? "portrait"
           : "landscape";
         sizePhotoCard(figure, image);
-        arrangePhotoSlides();
+        if (!hasKnownDimensions) {
+          arrangePhotoSlides();
+        }
       });
       image.addEventListener("error", () => {
         figure.dataset.orientation = "landscape";
-        arrangePhotoSlides();
+        if (!hasKnownDimensions) {
+          arrangePhotoSlides();
+        }
       });
       image.src = photo.image_url;
       previewButton.append(image);
