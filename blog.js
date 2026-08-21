@@ -60,6 +60,7 @@
   const deleteReleaseButton = document.querySelector("#deleteReleaseButton");
   const releaseError = document.querySelector("#releaseError");
   const photoGallery = document.querySelector("#photoGallery");
+  const photoCarouselStatus = document.querySelector("#photoCarouselStatus");
   const photoMessage = document.querySelector("#photoMessage");
   const photoAuthorStatus = document.querySelector("#photoAuthorStatus");
   const photoLogoutButton = document.querySelector("#photoLogoutButton");
@@ -752,6 +753,24 @@
     card.style.gridRowEnd = `span ${rowSpan}`;
   }
 
+  function updatePhotoCarouselStatus() {
+    const cards = Array.from(photoGallery.querySelectorAll(".photo-card"));
+    const showStatus = window.innerWidth <= 560 && cards.length > 1;
+    photoCarouselStatus.hidden = !showStatus;
+    if (!showStatus) {
+      return;
+    }
+    const firstOffset = cards[0].offsetLeft;
+    const activeIndex = cards.reduce((closestIndex, card, index) => {
+      const currentDistance = Math.abs(
+        cards[closestIndex].offsetLeft - firstOffset - photoGallery.scrollLeft,
+      );
+      const nextDistance = Math.abs(card.offsetLeft - firstOffset - photoGallery.scrollLeft);
+      return nextDistance < currentDistance ? index : closestIndex;
+    }, 0);
+    photoCarouselStatus.textContent = `${activeIndex + 1} / ${cards.length}`;
+  }
+
   function renderPhotos(nextPhotos) {
     if (!photosLoaded) {
       return;
@@ -765,6 +784,7 @@
       return;
     }
     photoMessage.hidden = true;
+    photoGallery.scrollLeft = 0;
     const layouts = ["feature", "standard", "tall", "wide", "standard", "tall", "wide"];
     shuffled(photos).forEach((photo, index) => {
       const figure = document.createElement("figure");
@@ -808,6 +828,7 @@
         sizePhotoCard(figure, image);
       }
     });
+    window.requestAnimationFrame(updatePhotoCarouselStatus);
   }
 
   async function loadPhotos() {
@@ -831,12 +852,18 @@
   }
 
   let photoResizeTimer;
+  let photoScrollFrame;
+  photoGallery.addEventListener("scroll", () => {
+    window.cancelAnimationFrame(photoScrollFrame);
+    photoScrollFrame = window.requestAnimationFrame(updatePhotoCarouselStatus);
+  });
   window.addEventListener("resize", () => {
     window.clearTimeout(photoResizeTimer);
     photoResizeTimer = window.setTimeout(() => {
       photoGallery.querySelectorAll(".photo-card").forEach((card) => {
         sizePhotoCard(card, card.querySelector("img"));
       });
+      updatePhotoCarouselStatus();
     }, 120);
   });
 

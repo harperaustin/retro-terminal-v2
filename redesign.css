@@ -273,6 +273,10 @@ body {
   transform: translateY(0);
 }
 
+.photo-carousel-status {
+  display: none;
+}
+
 .photo-edit-button {
   position: absolute;
   top: 10px;
@@ -497,17 +501,40 @@ dialog {
   }
 
   .photo-gallery {
-    display: block;
+    display: flex;
+    width: calc(100vw - 28px);
+    gap: 12px;
+    padding: 30px 28px 12px 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-right: 28px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .photo-gallery::-webkit-scrollbar {
+    display: none;
   }
 
   .photo-card {
+    flex: 0 0 calc(100% - 34px);
     min-height: 0;
-    margin-bottom: 12px;
+    margin: 0;
     aspect-ratio: auto;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .photo-card img {
     height: auto;
+  }
+
+  .photo-carousel-status {
+    display: block;
+    margin: 8px 0 0;
+    color: #aaa;
+    font-size: 11px;
+    letter-spacing: 0.08em;
   }
 
   #photoDialog {
