@@ -713,7 +713,7 @@
 
   function openPhotoLightbox(photo) {
     photoLightboxImage.src = photo.image_url;
-    photoLightboxImage.alt = photo.alt_text;
+    photoLightboxImage.alt = photo.alt_text || "";
     photoLightboxCaption.textContent = photo.caption || "";
     photoLightboxCaption.hidden = !photo.caption;
     photoLightbox.showModal();
@@ -773,11 +773,14 @@
       const previewButton = document.createElement("button");
       previewButton.className = "photo-card-button";
       previewButton.type = "button";
-      previewButton.setAttribute("aria-label", `View ${photo.alt_text}`);
+      previewButton.setAttribute(
+        "aria-label",
+        `View ${photo.alt_text || photo.caption || "photograph"}`,
+      );
       previewButton.addEventListener("click", () => openPhotoLightbox(photo));
 
       const image = document.createElement("img");
-      image.alt = photo.alt_text;
+      image.alt = photo.alt_text || "";
       image.loading = "lazy";
       image.addEventListener("load", () => sizePhotoCard(figure, image));
       image.src = photo.image_url;
@@ -963,13 +966,9 @@
       if (!imageUrl) {
         throw new Error("Choose a photograph to upload.");
       }
-      const altText = photoAltText.value.trim();
-      if (!altText) {
-        throw new Error("Add a screen-reader description for the photograph.");
-      }
       const photoValues = {
         image_url: imageUrl,
-        alt_text: altText,
+        alt_text: photoAltText.value.trim() || null,
         caption: photoCaption.value.trim() || null,
         taken_at: photoTakenAt.value || null,
       };
