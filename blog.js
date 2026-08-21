@@ -92,6 +92,16 @@
   let photosLoaded = false;
   let photos = [];
 
+  function setStatus(element, message, isLoading = false) {
+    element.classList.toggle("is-loading", isLoading);
+    element.textContent = message;
+    window.dispatchEvent(
+      new CustomEvent("redesign:loading-status", {
+        detail: { element, isLoading },
+      }),
+    );
+  }
+
   function readSession() {
     try {
       return JSON.parse(localStorage.getItem(sessionKey)) || null;
@@ -213,7 +223,7 @@
     blogPosts.hidden = true;
     blogDetail.hidden = true;
     blogMessage.hidden = false;
-    blogMessage.textContent = "Post not found.";
+    setStatus(blogMessage, "Post not found.");
     renderAuthorState();
     document.title = "Blog — Harper Austin";
   }
@@ -442,6 +452,8 @@
   function openPost(post) {
     selectedPost = post;
     blogPosts.hidden = true;
+    setStatus(blogMessage, "");
+    setStatus(blogMessage, "");
     blogMessage.hidden = true;
     blogDetail.hidden = false;
     blogDetailTitle.textContent = post.title;
@@ -475,10 +487,11 @@
     blogDetail.hidden = true;
     selectedPost = null;
     if (nextPosts.length === 0) {
-      blogMessage.textContent = "No posts yet.";
+      setStatus(blogMessage, "No posts yet.");
       blogMessage.hidden = false;
       return;
     }
+    setStatus(blogMessage, "");
     blogMessage.hidden = true;
     nextPosts.forEach((post) => {
       const button = document.createElement("button");
@@ -512,11 +525,11 @@
   async function loadPosts() {
     postsLoaded = true;
     if (!isConfigured) {
-      blogMessage.textContent = "Blog setup is not complete yet.";
+      setStatus(blogMessage, "Blog setup is not complete yet.");
       return;
     }
     blogMessage.hidden = false;
-    blogMessage.textContent = "Loading posts…";
+    setStatus(blogMessage, "loading...", true);
     try {
       const posts = await api(
         "/rest/v1/blog_posts?select=id,title,content,published_at,is_draft&order=published_at.desc",
@@ -526,7 +539,7 @@
       renderPosts(posts);
       showRoutedPost();
     } catch (error) {
-      blogMessage.textContent = `Could not load posts: ${error.message}`;
+      setStatus(blogMessage, `Could not load posts: ${error.message}`);
     }
   }
 
@@ -592,10 +605,11 @@
     releases = nextReleases;
     musicReleases.replaceChildren();
     if (releases.length === 0) {
-      musicMessage.textContent = "No releases yet.";
+      setStatus(musicMessage, "No releases yet.");
       musicMessage.hidden = false;
       return;
     }
+    setStatus(musicMessage, "");
     musicMessage.hidden = true;
     releases.forEach((release) => {
       const article = document.createElement("article");
@@ -651,11 +665,11 @@
   async function loadReleases() {
     releasesLoaded = true;
     if (!isConfigured) {
-      musicMessage.textContent = "Music setup is not complete yet.";
+      setStatus(musicMessage, "Music setup is not complete yet.");
       return;
     }
     musicMessage.hidden = false;
-    musicMessage.textContent = "Loading releases…";
+    setStatus(musicMessage, "loading...", true);
     try {
       const nextReleases = await api(
         "/rest/v1/music_releases?select=*&order=release_date.desc.nullslast,created_at.desc",
@@ -664,7 +678,7 @@
       );
       renderReleases(nextReleases);
     } catch (error) {
-      musicMessage.textContent = `Could not load releases: ${error.message}`;
+      setStatus(musicMessage, `Could not load releases: ${error.message}`);
     }
   }
 
@@ -817,10 +831,11 @@
     photoGallery.replaceChildren();
     shufflePhotosButton.hidden = photos.length < 2;
     if (photos.length === 0) {
-      photoMessage.textContent = "No photographs yet.";
+      setStatus(photoMessage, "No photographs yet.");
       photoMessage.hidden = false;
       return;
     }
+    setStatus(photoMessage, "");
     photoMessage.hidden = true;
     photoGallery.scrollLeft = 0;
     const layouts = ["feature", "standard", "tall", "wide", "standard", "tall", "wide"];
@@ -882,23 +897,42 @@
     window.requestAnimationFrame(arrangePhotoSlides);
   }
 
+  function preloadPhotos(nextPhotos) {
+    return Promise.all(
+      nextPhotos.map((photo) => new Promise((resolve) => {
+        const image = new Image();
+        image.addEventListener("load", async () => {
+          try {
+            await image.decode();
+          } catch {
+            // The load event still confirms the image is available to render.
+          }
+          resolve();
+        }, { once: true });
+        image.addEventListener("error", resolve, { once: true });
+        image.src = photo.image_url;
+      })),
+    );
+  }
+
   async function loadPhotos() {
     photosLoaded = true;
     if (!isConfigured) {
-      photoMessage.textContent = "Photography setup is not complete yet.";
+      setStatus(photoMessage, "Photography setup is not complete yet.");
       return;
     }
     photoMessage.hidden = false;
-    photoMessage.textContent = "Loading photographs…";
+    setStatus(photoMessage, "loading...", true);
     try {
       const nextPhotos = await api(
         "/rest/v1/photography_images?select=*&order=created_at.desc",
         {},
         isVerifiedAuthor,
       );
+      await preloadPhotos(nextPhotos);
       renderPhotos(nextPhotos);
     } catch (error) {
-      photoMessage.textContent = `Could not load photographs: ${error.message}`;
+      setStatus(photoMessage, `Could not load photographs: ${error.message}`);
     }
   }
 

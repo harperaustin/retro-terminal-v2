@@ -191,6 +191,26 @@ body {
   color: #333;
 }
 
+.blog-message.is-loading {
+  min-height: 90px;
+  color: #777;
+}
+
+.loading-character {
+  display: inline-block;
+  min-width: 0.18em;
+  transition:
+    color 280ms ease,
+    filter 320ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loading-character.is-rippling {
+  color: var(--ripple-color);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ripple-color) 16%, transparent));
+  transform: translateY(-0.5px) scale(1.012);
+}
+
 .photo-gallery {
   display: grid;
   grid-auto-flow: dense;

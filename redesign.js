@@ -58,6 +58,74 @@
   };
   const colors = ["#f4c430", "#ff9f1c", "#ff5a36", "#e83f6f", "#9b5de5"];
   let rippleCount = 0;
+  const loadingAnimations = new Map();
+
+  function stopLoadingAnimation(element) {
+    const animation = loadingAnimations.get(element);
+    if (!animation) {
+      return;
+    }
+    window.clearInterval(animation.interval);
+    animation.timers.forEach(window.clearTimeout);
+    loadingAnimations.delete(element);
+  }
+
+  function startLoadingAnimation(element) {
+    stopLoadingAnimation(element);
+    const label = element.textContent;
+    const characters = [];
+    const timers = new Set();
+    let centerIndex = 0;
+
+    element.setAttribute("aria-label", label);
+    element.replaceChildren();
+    Array.from(label).forEach((character) => {
+      const span = document.createElement("span");
+      span.className = "loading-character";
+      span.textContent = character;
+      span.setAttribute("aria-hidden", "true");
+      element.append(span);
+      characters.push(span);
+    });
+
+    function ripple() {
+      rippleCount += 1;
+      characters.forEach((span, index) => {
+        const original = label[index];
+        const distance = Math.abs(index - centerIndex);
+        const startTimer = window.setTimeout(() => {
+          timers.delete(startTimer);
+          const alternatives = substitutions[original.toLowerCase()];
+          span.textContent = alternatives
+            ? alternatives[(rippleCount + index) % alternatives.length]
+            : original;
+          span.style.setProperty("--ripple-color", colors[(rippleCount + index) % colors.length]);
+          span.classList.add("is-rippling");
+          const endTimer = window.setTimeout(() => {
+            timers.delete(endTimer);
+            span.textContent = original;
+            span.classList.remove("is-rippling");
+          }, 300);
+          timers.add(endTimer);
+        }, distance * 42);
+        timers.add(startTimer);
+      });
+      centerIndex = (centerIndex + 2) % characters.length;
+    }
+
+    ripple();
+    const interval = window.setInterval(ripple, 760);
+    loadingAnimations.set(element, { interval, timers });
+  }
+
+  window.addEventListener("redesign:loading-status", (event) => {
+    if (event.detail.isLoading) {
+      startLoadingAnimation(event.detail.element);
+    } else {
+      stopLoadingAnimation(event.detail.element);
+    }
+  });
+  document.querySelectorAll(".blog-message.is-loading").forEach(startLoadingAnimation);
 
   document.querySelectorAll(".minimal-home h1, .minimal-link").forEach((element) => {
     const label = element.textContent.trim();
