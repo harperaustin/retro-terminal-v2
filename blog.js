@@ -156,6 +156,7 @@
     }
     if (name === "terminal") {
       document.title = "Harper Austin";
+      window.dispatchEvent(new CustomEvent("redesign:home-visible"));
     } else if (name === "music") {
       document.title = "Music — Harper Austin";
     } else if (name === "photography") {

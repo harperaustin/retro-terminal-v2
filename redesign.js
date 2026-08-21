@@ -87,6 +87,17 @@
       startRipple(Math.floor(characters.length / 2));
     });
 
+    window.addEventListener("redesign:home-visible", () => {
+      timers.forEach((activeTimers) => {
+        activeTimers.forEach(window.clearTimeout);
+      });
+      timers.clear();
+      characters.forEach((span, index) => {
+        span.textContent = label[index] === " " ? "\u00a0" : label[index];
+        span.classList.remove("is-rippling");
+      });
+    });
+
     function startRipple(centerIndex) {
       const now = Date.now();
       if (now - lastRippleAt < 110) {
