@@ -1,7 +1,8 @@
 (() => {
   const authorLoginHotspot = document.querySelector("#authorLoginHotspot");
   const musicAuthorLoginHotspot = document.querySelector("#musicAuthorLoginHotspot");
-  [authorLoginHotspot, musicAuthorLoginHotspot].forEach((hotspot) => {
+  const photoAuthorLoginHotspot = document.querySelector("#photoAuthorLoginHotspot");
+  [authorLoginHotspot, musicAuthorLoginHotspot, photoAuthorLoginHotspot].forEach((hotspot) => {
     hotspot.addEventListener("click", () => {
       window.dispatchEvent(new CustomEvent("terminal:author-login"));
     });

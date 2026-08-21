@@ -9,6 +9,7 @@
   const terminalView = document.querySelector("#terminalView");
   const blogView = document.querySelector("#blogView");
   const musicView = document.querySelector("#musicView");
+  const photographyView = document.querySelector("#photographyView");
   const blogPosts = document.querySelector("#blogPosts");
   const blogMessage = document.querySelector("#blogMessage");
   const blogDetail = document.querySelector("#blogDetail");
@@ -58,6 +59,26 @@
   const importSpotifyButton = document.querySelector("#importSpotifyButton");
   const deleteReleaseButton = document.querySelector("#deleteReleaseButton");
   const releaseError = document.querySelector("#releaseError");
+  const photoGallery = document.querySelector("#photoGallery");
+  const photoMessage = document.querySelector("#photoMessage");
+  const photoAuthorStatus = document.querySelector("#photoAuthorStatus");
+  const photoLogoutButton = document.querySelector("#photoLogoutButton");
+  const newPhotoButton = document.querySelector("#newPhotoButton");
+  const shufflePhotosButton = document.querySelector("#shufflePhotosButton");
+  const photoDialog = document.querySelector("#photoDialog");
+  const photoForm = document.querySelector("#photoForm");
+  const photoDialogTitle = document.querySelector("#photoDialogTitle");
+  const photoId = document.querySelector("#photoId");
+  const photoFile = document.querySelector("#photoFile");
+  const photoFileLabelText = document.querySelector("#photoFileLabelText");
+  const photoAltText = document.querySelector("#photoAltText");
+  const photoCaption = document.querySelector("#photoCaption");
+  const photoTakenAt = document.querySelector("#photoTakenAt");
+  const photoError = document.querySelector("#photoError");
+  const deletePhotoButton = document.querySelector("#deletePhotoButton");
+  const photoLightbox = document.querySelector("#photoLightbox");
+  const photoLightboxImage = document.querySelector("#photoLightboxImage");
+  const photoLightboxCaption = document.querySelector("#photoLightboxCaption");
   let session = readSession();
   let isVerifiedAuthor = false;
   let authorCheckPromise;
@@ -67,6 +88,8 @@
   let pendingPostId = null;
   let releasesLoaded = false;
   let releases = [];
+  let photosLoaded = false;
+  let photos = [];
 
   function readSession() {
     try {
@@ -97,17 +120,24 @@
     musicLogoutButton.hidden = !isVerifiedAuthor;
     newReleaseButton.hidden = !isVerifiedAuthor;
     renderReleases(releases);
+    photoAuthorStatus.hidden = !isVerifiedAuthor;
+    photoLogoutButton.hidden = !isVerifiedAuthor;
+    newPhotoButton.hidden = !isVerifiedAuthor;
+    renderPhotos(photos);
   }
 
   function setView(name) {
     const showBlog = name === "blog";
     const showMusic = name === "music";
-    terminalView.hidden = showBlog || showMusic;
+    const showPhotography = name === "photography";
+    terminalView.hidden = showBlog || showMusic || showPhotography;
     terminalView.classList.toggle("is-active", name === "terminal");
     blogView.hidden = !showBlog;
     blogView.classList.toggle("is-active", showBlog);
     musicView.hidden = !showMusic;
     musicView.classList.toggle("is-active", showMusic);
+    photographyView.hidden = !showPhotography;
+    photographyView.classList.toggle("is-active", showPhotography);
     tabs.forEach((tab) => {
       const isActive = tab.dataset.view === name;
       tab.classList.toggle("is-active", isActive);
@@ -119,10 +149,17 @@
     if (showMusic && !releasesLoaded) {
       loadReleases();
     }
+    if (showPhotography && !photosLoaded) {
+      loadPhotos();
+    } else if (showPhotography) {
+      renderPhotos(photos);
+    }
     if (name === "terminal") {
       document.title = "Harper Austin";
     } else if (name === "music") {
       document.title = "Music — Harper Austin";
+    } else if (name === "photography") {
+      document.title = "Photography — Harper Austin";
     }
   }
 
@@ -139,6 +176,11 @@
       pendingPostId = null;
       setView("music");
       document.title = "Music — Harper Austin";
+      return;
+    }
+    if (window.location.hash === "#photography") {
+      pendingPostId = null;
+      setView("photography");
       return;
     }
     const match = window.location.hash.match(/^#blog(?:\/(\d+))?$/);
@@ -246,6 +288,9 @@
         }
         if (!musicView.hidden && releasesLoaded) {
           await loadReleases();
+        }
+        if (!photographyView.hidden && photosLoaded) {
+          await loadPhotos();
         }
       }
       return isVerifiedAuthor;
@@ -621,9 +666,9 @@
     }
   }
 
-  async function uploadCover(file) {
-    if (file.size > 8 * 1024 * 1024) {
-      throw new Error("Cover artwork must be smaller than 8 MB.");
+  async function uploadImage(file, bucket, label, maximumSizeMb) {
+    if (file.size > maximumSizeMb * 1024 * 1024) {
+      throw new Error(`${label} must be smaller than ${maximumSizeMb} MB.`);
     }
     const extensionByType = {
       "image/jpeg": "jpg",
@@ -632,10 +677,10 @@
     };
     const extension = extensionByType[file.type];
     if (!extension) {
-      throw new Error("Cover artwork must be a JPG, PNG, or WebP image.");
+      throw new Error(`${label} must be a JPG, PNG, or WebP image.`);
     }
     const objectPath = `${crypto.randomUUID()}.${extension}`;
-    const response = await fetch(`${supabaseUrl}/storage/v1/object/music-covers/${objectPath}`, {
+    const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}/${objectPath}`, {
       method: "POST",
       headers: {
         apikey: anonKey,
@@ -647,9 +692,119 @@
     });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
-      throw new Error(body.message || body.error || "Could not upload cover artwork.");
+      throw new Error(body.message || body.error || `Could not upload ${label.toLowerCase()}.`);
     }
-    return `${supabaseUrl}/storage/v1/object/public/music-covers/${objectPath}`;
+    return `${supabaseUrl}/storage/v1/object/public/${bucket}/${objectPath}`;
+  }
+
+  function uploadCover(file) {
+    return uploadImage(file, "music-covers", "Cover artwork", 8);
+  }
+
+  function shuffled(items) {
+    const nextItems = [...items];
+    for (let index = nextItems.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [nextItems[index], nextItems[randomIndex]] = [nextItems[randomIndex], nextItems[index]];
+    }
+    return nextItems;
+  }
+
+  function openPhotoLightbox(photo) {
+    photoLightboxImage.src = photo.image_url;
+    photoLightboxImage.alt = photo.alt_text;
+    photoLightboxCaption.textContent = photo.caption || "";
+    photoLightboxCaption.hidden = !photo.caption;
+    photoLightbox.showModal();
+  }
+
+  function openPhotoEditor(photo = null) {
+    if (!isVerifiedAuthor) {
+      return;
+    }
+    photoForm.reset();
+    photoError.textContent = "";
+    photoId.value = photo?.id || "";
+    photoAltText.value = photo?.alt_text || "";
+    photoCaption.value = photo?.caption || "";
+    photoTakenAt.value = photo?.taken_at || "";
+    photoFile.required = !photo;
+    photoFileLabelText.textContent = photo ? "Replace photograph (optional)" : "Photograph";
+    photoDialogTitle.textContent = photo ? "Edit photograph" : "Upload photograph";
+    deletePhotoButton.hidden = !photo;
+    photoDialog.showModal();
+    (photo ? photoAltText : photoFile).focus();
+  }
+
+  function renderPhotos(nextPhotos) {
+    if (!photosLoaded) {
+      return;
+    }
+    photos = nextPhotos;
+    photoGallery.replaceChildren();
+    shufflePhotosButton.hidden = photos.length < 2;
+    if (photos.length === 0) {
+      photoMessage.textContent = "No photographs yet.";
+      photoMessage.hidden = false;
+      return;
+    }
+    photoMessage.hidden = true;
+    const layouts = ["feature", "standard", "tall", "wide", "standard", "tall", "wide"];
+    shuffled(photos).forEach((photo, index) => {
+      const figure = document.createElement("figure");
+      figure.className = "photo-card";
+      figure.dataset.layout = layouts[index % layouts.length];
+      figure.style.setProperty("--photo-delay", `${Math.min(index * 55, 440)}ms`);
+
+      const previewButton = document.createElement("button");
+      previewButton.className = "photo-card-button";
+      previewButton.type = "button";
+      previewButton.setAttribute("aria-label", `View ${photo.alt_text}`);
+      previewButton.addEventListener("click", () => openPhotoLightbox(photo));
+
+      const image = document.createElement("img");
+      image.src = photo.image_url;
+      image.alt = photo.alt_text;
+      image.loading = "lazy";
+      previewButton.append(image);
+      figure.append(previewButton);
+
+      if (photo.caption) {
+        const caption = document.createElement("figcaption");
+        caption.className = "photo-caption";
+        caption.textContent = photo.caption;
+        figure.append(caption);
+      }
+      if (isVerifiedAuthor) {
+        const editButton = document.createElement("button");
+        editButton.className = "photo-edit-button";
+        editButton.type = "button";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", () => openPhotoEditor(photo));
+        figure.append(editButton);
+      }
+      photoGallery.append(figure);
+    });
+  }
+
+  async function loadPhotos() {
+    photosLoaded = true;
+    if (!isConfigured) {
+      photoMessage.textContent = "Photography setup is not complete yet.";
+      return;
+    }
+    photoMessage.hidden = false;
+    photoMessage.textContent = "Loading photographs…";
+    try {
+      const nextPhotos = await api(
+        "/rest/v1/photography_images?select=*&order=created_at.desc",
+        {},
+        isVerifiedAuthor,
+      );
+      renderPhotos(nextPhotos);
+    } catch (error) {
+      photoMessage.textContent = `Could not load photographs: ${error.message}`;
+    }
   }
 
   async function openAuthorLogin() {
@@ -676,6 +831,8 @@
         setRoute("#blog");
       } else if (tab.dataset.view === "music") {
         setRoute("#music");
+      } else if (tab.dataset.view === "photography") {
+        setRoute("#photography");
       } else {
         window.history.pushState(
           null,
@@ -730,6 +887,9 @@
       if (releasesLoaded) {
         await loadReleases();
       }
+      if (photosLoaded) {
+        await loadPhotos();
+      }
       applyRoute();
     } catch (error) {
       authorError.textContent = error.message;
@@ -753,6 +913,88 @@
   });
 
   newReleaseButton.addEventListener("click", () => openReleaseEditor());
+  newPhotoButton.addEventListener("click", () => openPhotoEditor());
+  shufflePhotosButton.addEventListener("click", () => renderPhotos(photos));
+
+  photoForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!isVerifiedAuthor) {
+      photoError.textContent = "Your author session is not authorized.";
+      return;
+    }
+    photoError.textContent = "";
+    const submitButton = photoForm.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      const editingPhotoId = photoId.value;
+      const editingPhoto = photos.find(({ id }) => String(id) === editingPhotoId);
+      const file = photoFile.files[0];
+      const imageUrl = file
+        ? await uploadImage(file, "photography", "Photograph", 12)
+        : editingPhoto?.image_url;
+      if (!imageUrl) {
+        throw new Error("Choose a photograph to upload.");
+      }
+      const altText = photoAltText.value.trim();
+      if (!altText) {
+        throw new Error("Add a screen-reader description for the photograph.");
+      }
+      const photoValues = {
+        image_url: imageUrl,
+        alt_text: altText,
+        caption: photoCaption.value.trim() || null,
+        taken_at: photoTakenAt.value || null,
+      };
+      const savedPhotos = await api(
+        editingPhotoId
+          ? `/rest/v1/photography_images?id=eq.${encodeURIComponent(editingPhotoId)}`
+          : "/rest/v1/photography_images",
+        {
+          method: editingPhotoId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+          body: JSON.stringify(photoValues),
+        },
+        true,
+      );
+      if (!Array.isArray(savedPhotos) || savedPhotos.length !== 1) {
+        throw new Error("Supabase did not authorize this change.");
+      }
+      photoDialog.close();
+      await loadPhotos();
+    } catch (error) {
+      photoError.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  deletePhotoButton.addEventListener("click", async () => {
+    const editingPhoto = photos.find(({ id }) => String(id) === photoId.value);
+    if (
+      !isVerifiedAuthor
+      || !editingPhoto
+      || !window.confirm("Delete this photograph? This cannot be undone.")
+    ) {
+      return;
+    }
+    deletePhotoButton.disabled = true;
+    try {
+      const deletedPhotos = await api(
+        `/rest/v1/photography_images?id=eq.${encodeURIComponent(editingPhoto.id)}`,
+        { method: "DELETE", headers: { Prefer: "return=representation" } },
+        true,
+      );
+      if (!Array.isArray(deletedPhotos) || deletedPhotos.length !== 1) {
+        throw new Error("Supabase did not authorize the deletion.");
+      }
+      photoDialog.close();
+      await loadPhotos();
+    } catch (error) {
+      photoError.textContent = error.message;
+    } finally {
+      deletePhotoButton.disabled = false;
+    }
+  });
 
   importSpotifyButton.addEventListener("click", async () => {
     const spotifyValue = releaseSpotifyUrl.value.trim();
@@ -1029,12 +1271,16 @@
         if (releasesLoaded) {
           await loadReleases();
         }
+        if (photosLoaded) {
+          await loadPhotos();
+        }
       }
     }
   }
 
   logoutButton.addEventListener("click", logout);
   musicLogoutButton.addEventListener("click", logout);
+  photoLogoutButton.addEventListener("click", logout);
 
   window.addEventListener("terminal:author-login", () => {
     openAuthorLogin();

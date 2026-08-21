@@ -32,6 +32,11 @@ The **Music** page displays albums, EPs, and singles with links to their
 streaming platforms. Authorized authors can import release names and cover art
 from Spotify, edit the metadata, or upload cover artwork directly.
 
+The **Photography** page presents uploaded images in a responsive editorial
+collage. It shuffles image order and scale on each visit, includes a manual
+shuffle control and full-size viewer, and exposes upload controls to authorized
+authors.
+
 ## Configure the blog
 
 1. Create a Supabase project and run `supabase/schema.sql` in its SQL editor.
@@ -50,6 +55,7 @@ For an existing blog database created before draft support, run
 `supabase/add-drafts.sql` once in the Supabase SQL editor.
 To add the music catalog to an existing database, run
 `supabase/add-music.sql` once in the Supabase SQL editor.
+To add the photography gallery, run `supabase/add-photography.sql` once.
 
 Row-level security allows everyone to read published posts but only users
 listed in `blog_authors` to create, edit, or delete them.

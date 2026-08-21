@@ -8,7 +8,7 @@
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="stylesheet" href="modern.css?v=33" />
-    <link rel="stylesheet" href="redesign.css?v=7" />
+    <link rel="stylesheet" href="redesign.css?v=8" />
   </head>
   <body>
     <main class="minimal-shell">
@@ -20,7 +20,9 @@
           <a class="minimal-link" href="https://www.linkedin.com/in/harper-austin-523743276/">linkedin</a>
           <a class="minimal-link" href="https://github.com/harperaustin">github</a>
           <button class="minimal-link terminal-tab" type="button" data-view="music">music</button>
-          <a class="minimal-link" href="#photography">photography</a>
+          <button class="minimal-link terminal-tab" type="button" data-view="photography">
+            photography
+          </button>
         </nav>
         <section class="minimal-about" id="aboutPanel" aria-hidden="true">
           <div>
@@ -51,6 +53,46 @@
         <button
           class="author-login-hotspot"
           id="musicAuthorLoginHotspot"
+          type="button"
+          aria-label="Author login"
+        ></button>
+      </section>
+
+      <section
+        class="photography-view site-view"
+        id="photographyView"
+        aria-labelledby="photographyHeading"
+        hidden
+      >
+        <header class="blog-header">
+          <div>
+            <button class="blog-home-link terminal-tab" type="button" data-view="terminal">
+              ← back
+            </button>
+            <h1 id="photographyHeading">Photography</h1>
+          </div>
+          <div class="blog-actions">
+            <button class="gallery-shuffle-button" id="shufflePhotosButton" type="button">
+              shuffle
+            </button>
+            <span class="blog-author-status" id="photoAuthorStatus" hidden>Author mode</span>
+            <button class="blog-action-button" id="photoLogoutButton" type="button" hidden>
+              Log out
+            </button>
+            <button
+              class="blog-add-button"
+              id="newPhotoButton"
+              type="button"
+              aria-label="Upload a photograph"
+              hidden
+            >+</button>
+          </div>
+        </header>
+        <div class="blog-message" id="photoMessage" role="status">Loading photographs…</div>
+        <div class="photo-gallery" id="photoGallery"></div>
+        <button
+          class="author-login-hotspot"
+          id="photoAuthorLoginHotspot"
           type="button"
           aria-label="Author login"
         ></button>
@@ -228,8 +270,68 @@
       </form>
     </dialog>
 
+    <dialog id="photoDialog" aria-labelledby="photoDialogTitle">
+      <form class="blog-dialog-form" id="photoForm">
+        <div class="dialog-header">
+          <h2 id="photoDialogTitle">Upload photograph</h2>
+          <button
+            class="dialog-close-button"
+            type="button"
+            data-close-dialog="photoDialog"
+            aria-label="Close editor"
+          >×</button>
+        </div>
+        <div class="blog-form-fields">
+          <input id="photoId" type="hidden" />
+          <label id="photoFileLabel">
+            <span id="photoFileLabelText">Photograph</span>
+            <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" required />
+          </label>
+          <label>
+            Description for screen readers
+            <input
+              id="photoAltText"
+              type="text"
+              maxlength="240"
+              placeholder="A concise description of the image"
+              required
+            />
+          </label>
+          <label>
+            Caption
+            <input id="photoCaption" type="text" maxlength="240" />
+          </label>
+          <label>
+            Date taken
+            <input id="photoTakenAt" type="date" />
+          </label>
+          <p class="blog-form-error" id="photoError" role="alert"></p>
+          <div class="blog-save-actions">
+            <button
+              class="blog-secondary-button blog-delete-button"
+              id="deletePhotoButton"
+              type="button"
+              hidden
+            >Delete</button>
+            <button class="blog-primary-button" type="submit">Save photograph</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="photo-lightbox" id="photoLightbox" aria-label="Photograph preview">
+      <button
+        class="photo-lightbox-close"
+        type="button"
+        data-close-dialog="photoLightbox"
+        aria-label="Close photograph"
+      >×</button>
+      <img id="photoLightboxImage" alt="" />
+      <p id="photoLightboxCaption"></p>
+    </dialog>
+
     <script src="site-config.js?v=1"></script>
-    <script src="blog.js?v=8"></script>
-    <script src="redesign.js?v=7"></script>
+    <script src="blog.js?v=9"></script>
+    <script src="redesign.js?v=8"></script>
   </body>
 </html>
