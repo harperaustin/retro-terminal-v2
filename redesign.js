@@ -60,7 +60,7 @@
   let rippleCount = 0;
 
   document.querySelectorAll(".minimal-home h1, .minimal-link").forEach((element) => {
-    const label = element.textContent;
+    const label = element.textContent.trim();
     const characters = [];
     const timers = new Map();
     let lastRippleAt = 0;
