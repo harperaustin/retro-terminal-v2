@@ -91,6 +91,7 @@
   let releases = [];
   let photosLoaded = false;
   let photos = [];
+  const photoDimensions = new Map();
 
   function setStatus(element, message, isLoading = false) {
     element.classList.toggle("is-loading", isLoading);
@@ -844,6 +845,12 @@
       figure.className = "photo-card";
       figure.dataset.layout = layouts[index % layouts.length];
       figure.style.setProperty("--photo-delay", `${Math.min(index * 55, 440)}ms`);
+      const dimensions = photoDimensions.get(photo.id);
+      if (dimensions) {
+        figure.dataset.orientation = dimensions.height > dimensions.width
+          ? "portrait"
+          : "landscape";
+      }
 
       const previewButton = document.createElement("button");
       previewButton.className = "photo-card-button";
@@ -856,8 +863,12 @@
 
       const image = document.createElement("img");
       image.alt = photo.alt_text || "";
-      image.loading = window.innerWidth <= 560 ? "eager" : "lazy";
+      image.loading = "lazy";
       image.addEventListener("load", () => {
+        photoDimensions.set(photo.id, {
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
         figure.dataset.orientation = image.naturalHeight > image.naturalWidth
           ? "portrait"
           : "landscape";
@@ -897,22 +908,32 @@
     window.requestAnimationFrame(arrangePhotoSlides);
   }
 
-  function preloadPhotos(nextPhotos) {
-    return Promise.all(
-      nextPhotos.map((photo) => new Promise((resolve) => {
-        const image = new Image();
-        image.addEventListener("load", async () => {
-          try {
-            await image.decode();
-          } catch {
-            // The load event still confirms the image is available to render.
-          }
-          resolve();
-        }, { once: true });
-        image.addEventListener("error", resolve, { once: true });
-        image.src = photo.image_url;
-      })),
-    );
+  async function preloadPhotos(nextPhotos) {
+    let nextIndex = 0;
+
+    async function preloadNext() {
+      while (nextIndex < nextPhotos.length) {
+        const photo = nextPhotos[nextIndex];
+        nextIndex += 1;
+        await new Promise((resolve) => {
+          const image = new Image();
+          image.addEventListener("load", () => {
+            photoDimensions.set(photo.id, {
+              width: image.naturalWidth,
+              height: image.naturalHeight,
+            });
+            resolve();
+          }, { once: true });
+          image.addEventListener("error", () => {
+            photoDimensions.set(photo.id, { width: 1, height: 1 });
+            resolve();
+          }, { once: true });
+          image.src = photo.image_url;
+        });
+      }
+    }
+
+    await Promise.all([preloadNext(), preloadNext()]);
   }
 
   async function loadPhotos() {
@@ -929,6 +950,7 @@
         {},
         isVerifiedAuthor,
       );
+      photoDimensions.clear();
       await preloadPhotos(nextPhotos);
       renderPhotos(nextPhotos);
     } catch (error) {
