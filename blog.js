@@ -755,20 +755,10 @@
     (photo ? photoAltText : photoFile).focus();
   }
 
-  function sizePhotoCard(card, image) {
-    if (!image.naturalWidth || !image.naturalHeight || window.innerWidth <= 560) {
-      card.style.removeProperty("grid-row-end");
-      return;
-    }
-    const galleryStyles = window.getComputedStyle(photoGallery);
-    const rowHeight = Number.parseFloat(galleryStyles.gridAutoRows);
-    const rowGap = Number.parseFloat(galleryStyles.rowGap);
-    const imageHeight = card.clientWidth * (image.naturalHeight / image.naturalWidth);
-    const rowSpan = Math.ceil((imageHeight + rowGap) / (rowHeight + rowGap));
-    card.style.gridRowEnd = `span ${rowSpan}`;
-  }
-
   function arrangePhotoSlides() {
+    photoGallery.querySelectorAll(".photo-group").forEach((group) => {
+      group.replaceWith(...group.children);
+    });
     photoGallery.querySelectorAll(".photo-slide").forEach((slide) => {
       slide.replaceWith(...slide.children);
     });
@@ -777,31 +767,67 @@
       return;
     }
 
-    const slides = [];
-    let pendingLandscape = null;
-    cards.forEach((card) => {
-      if (card.dataset.orientation === "portrait") {
-        const slide = document.createElement("div");
-        slide.className = "photo-slide photo-slide-portrait";
-        slide.append(card);
-        slides.push(slide);
-      } else if (pendingLandscape) {
-        const slide = document.createElement("div");
-        slide.className = "photo-slide photo-slide-landscape";
-        slide.append(pendingLandscape, card);
-        slides.push(slide);
-        pendingLandscape = null;
-      } else {
-        pendingLandscape = card;
-      }
-    });
-    if (pendingLandscape) {
+    const portraits = cards.filter((card) => card.dataset.orientation === "portrait");
+    const landscapes = cards.filter((card) => card.dataset.orientation === "landscape");
+    const groups = [];
+    let groupIndex = 0;
+
+    function createSlide(className, slideCards) {
       const slide = document.createElement("div");
-      slide.className = "photo-slide photo-slide-landscape";
-      slide.append(pendingLandscape);
-      slides.push(slide);
+      slide.className = `photo-slide ${className}`;
+      slide.append(...slideCards);
+      return slide;
     }
-    photoGallery.replaceChildren(...slides);
+
+    function createGroup(className, slides) {
+      const group = document.createElement("div");
+      group.className = `photo-group ${className}`;
+      group.append(...slides);
+      groups.push(group);
+      groupIndex += 1;
+    }
+
+    while (portraits.length || landscapes.length) {
+      if (groupIndex > 0 && groupIndex % 4 === 3 && landscapes.length >= 2) {
+        createGroup(
+          "photo-group-full",
+          [createSlide("photo-slide-full", landscapes.splice(0, 2))],
+        );
+      } else if (portraits.length && landscapes.length >= 2) {
+        createGroup(
+          groupIndex % 2 === 0 ? "photo-group-trio-a" : "photo-group-trio-b",
+          [
+            createSlide("photo-slide-portrait", [portraits.shift()]),
+            createSlide("photo-slide-landscape", landscapes.splice(0, 2)),
+          ],
+        );
+      } else if (landscapes.length >= 2) {
+        createGroup(
+          "photo-group-landscapes",
+          [createSlide("photo-slide-landscape", landscapes.splice(0, 2))],
+        );
+      } else if (portraits.length >= 2) {
+        createGroup(
+          "photo-group-portraits",
+          [
+            createSlide("photo-slide-portrait", [portraits.shift()]),
+            createSlide("photo-slide-portrait", [portraits.shift()]),
+          ],
+        );
+      } else if (portraits.length) {
+        createGroup(
+          "photo-group-single",
+          [createSlide("photo-slide-portrait", [portraits.shift()])],
+        );
+      } else {
+        createGroup(
+          "photo-group-full",
+          [createSlide("photo-slide-full", [landscapes.shift()])],
+        );
+      }
+    }
+
+    photoGallery.replaceChildren(...groups);
     updatePhotoCarouselStatus();
   }
 
@@ -823,7 +849,7 @@
     photoCarouselStatus.textContent = `${activeIndex + 1} / ${slides.length}`;
   }
 
-  function renderPhotos(nextPhotos) {
+  function renderPhotos(nextPhotos, shouldShuffle = false) {
     if (!photosLoaded) {
       return;
     }
@@ -838,11 +864,10 @@
     setStatus(photoMessage, "");
     photoMessage.hidden = true;
     photoGallery.scrollLeft = 0;
-    const layouts = ["feature", "standard", "tall", "wide", "standard", "tall", "wide"];
-    shuffled(photos).forEach((photo, index) => {
+    const orderedPhotos = shouldShuffle ? shuffled(photos) : photos;
+    orderedPhotos.forEach((photo, index) => {
       const figure = document.createElement("figure");
       figure.className = "photo-card";
-      figure.dataset.layout = layouts[index % layouts.length];
       figure.style.setProperty("--photo-delay", `${Math.min(index * 55, 440)}ms`);
       const dimensions = photoDimensions.get(photo.id);
       const hasKnownDimensions = Boolean(dimensions);
@@ -872,7 +897,6 @@
         figure.dataset.orientation = image.naturalHeight > image.naturalWidth
           ? "portrait"
           : "landscape";
-        sizePhotoCard(figure, image);
         if (!hasKnownDimensions) {
           arrangePhotoSlides();
         }
@@ -906,7 +930,6 @@
         figure.dataset.orientation = image.naturalHeight > image.naturalWidth
           ? "portrait"
           : "landscape";
-        sizePhotoCard(figure, image);
       }
     });
     window.requestAnimationFrame(arrangePhotoSlides);
@@ -950,7 +973,7 @@
     setStatus(photoMessage, "loading...", true);
     try {
       const nextPhotos = await api(
-        "/rest/v1/photography_images?select=*&order=created_at.desc",
+        "/rest/v1/photography_images?select=*&order=created_at.desc,id.desc",
         {},
         isVerifiedAuthor,
       );
@@ -971,9 +994,6 @@
   window.addEventListener("resize", () => {
     window.clearTimeout(photoResizeTimer);
     photoResizeTimer = window.setTimeout(() => {
-      photoGallery.querySelectorAll(".photo-card").forEach((card) => {
-        sizePhotoCard(card, card.querySelector("img"));
-      });
       updatePhotoCarouselStatus();
     }, 120);
   });
@@ -1108,7 +1128,7 @@
 
   newReleaseButton.addEventListener("click", () => openReleaseEditor());
   newPhotoButton.addEventListener("click", () => openPhotoEditor());
-  shufflePhotosButton.addEventListener("click", () => renderPhotos(photos));
+  shufflePhotosButton.addEventListener("click", () => renderPhotos(photos, true));
 
   photoFile.addEventListener("change", () => {
     if (photoId.value) {

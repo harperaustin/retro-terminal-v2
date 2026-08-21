@@ -220,8 +220,6 @@ body {
 
 .photo-gallery {
   display: grid;
-  grid-auto-flow: dense;
-  grid-auto-rows: 8px;
   grid-template-columns: repeat(12, 1fr);
   gap: clamp(10px, 1.5vw, 18px);
   padding-top: 42px;
@@ -229,8 +227,6 @@ body {
 
 .photo-card {
   position: relative;
-  align-self: start;
-  grid-column: span 4;
   margin: 0;
   overflow: hidden;
   background: #f3f3f3;
@@ -241,19 +237,61 @@ body {
 }
 
 .photo-slide {
-  display: contents;
+  display: grid;
+  gap: clamp(10px, 1.5vw, 18px);
 }
 
-.photo-card[data-layout="wide"] {
-  grid-column: span 7;
+.photo-group {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(10px, 1.5vw, 18px);
+  align-items: start;
 }
 
-.photo-card[data-layout="tall"] {
-  grid-column: span 4;
+.photo-group-trio-a .photo-slide-portrait,
+.photo-group-trio-b .photo-slide-landscape {
+  grid-column: 1 / 7;
 }
 
-.photo-card[data-layout="feature"] {
-  grid-column: span 8;
+.photo-group-trio-a .photo-slide-landscape,
+.photo-group-trio-b .photo-slide-portrait {
+  grid-column: 7 / -1;
+}
+
+.photo-group-trio-a .photo-slide-portrait,
+.photo-group-trio-b .photo-slide-portrait {
+  grid-row: 1;
+}
+
+.photo-group-trio-a .photo-slide-landscape,
+.photo-group-trio-b .photo-slide-landscape {
+  grid-row: 1;
+}
+
+.photo-group-full .photo-slide,
+.photo-group-single .photo-slide {
+  grid-column: 1 / -1;
+}
+
+.photo-group-single .photo-slide {
+  width: min(62%, 620px);
+  justify-self: center;
+}
+
+.photo-group-landscapes .photo-slide {
+  grid-column: 1 / -1;
+  grid-template-columns: 7fr 5fr;
+  align-items: start;
+}
+
+.photo-group-portraits .photo-slide:first-child {
+  grid-column: 1 / 8;
+}
+
+.photo-group-portraits .photo-slide:last-child {
+  grid-column: 8 / -1;
+  padding-top: clamp(48px, 8vw, 110px);
 }
 
 .photo-card-button {
@@ -563,6 +601,14 @@ dialog {
     gap: 12px;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+  }
+
+  .photo-group {
+    display: contents;
+  }
+
+  .photo-group-single .photo-slide {
+    width: auto;
   }
 
   .photo-card img {
