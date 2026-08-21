@@ -100,7 +100,7 @@
   let postsLoaded = false;
   let posts = [];
   let selectedPost = null;
-  let pendingPostId = null;
+  let pendingPostRoute = null;
   let releasesLoaded = false;
   let releases = [];
   let photosLoaded = false;
@@ -218,37 +218,65 @@
 
   function applyRoute() {
     if (window.location.hash === "#music") {
-      pendingPostId = null;
+      pendingPostRoute = null;
       setView("music");
       document.title = "Music — Harper Austin";
       return;
     }
     if (window.location.hash === "#photography") {
-      pendingPostId = null;
+      pendingPostRoute = null;
       setView("photography");
       return;
     }
-    const match = window.location.hash.match(/^#blog(?:\/(\d+))?$/);
+    const match = window.location.hash.match(/^#blog(?:\/([^/]+))?$/);
     if (!match) {
-      pendingPostId = null;
+      pendingPostRoute = null;
       setView("terminal");
       document.title = "Harper Austin";
       return;
     }
-    pendingPostId = match[1] || null;
+    pendingPostRoute = match[1] || null;
     setView("blog");
     if (postsLoaded) {
       showRoutedPost();
     }
   }
 
+  function getPostSlug(post) {
+    return post.title
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  function getPostRoute(post) {
+    const slug = getPostSlug(post);
+    const baseRoute = slug && !/^\d+$/.test(slug) ? slug : `post-${slug || post.id}`;
+    const hasDuplicate = posts.some((candidate) => (
+      candidate.id !== post.id && getPostSlug(candidate) === slug
+    ));
+    return hasDuplicate ? `${baseRoute}-${post.id}` : baseRoute;
+  }
+
   function showRoutedPost() {
-    if (!pendingPostId) {
+    if (!pendingPostRoute) {
       closePost();
       return;
     }
-    const post = posts.find(({ id }) => String(id) === pendingPostId);
+    const numericPost = /^\d+$/.test(pendingPostRoute)
+      ? posts.find(({ id }) => String(id) === pendingPostRoute)
+      : null;
+    const post = numericPost || posts.find((candidate) => (
+      getPostRoute(candidate) === pendingPostRoute
+    ));
     if (post) {
+      const canonicalRoute = getPostRoute(post);
+      if (pendingPostRoute !== canonicalRoute) {
+        pendingPostRoute = canonicalRoute;
+        window.history.replaceState(null, "", `#blog/${canonicalRoute}`);
+      }
       openPost(post);
       return;
     }
@@ -504,7 +532,6 @@
     selectedPost = post;
     blogPosts.hidden = true;
     setStatus(blogMessage, "");
-    setStatus(blogMessage, "");
     blogMessage.hidden = true;
     blogDetail.hidden = false;
     blogDetailTitle.textContent = post.title;
@@ -559,7 +586,7 @@
       const title = document.createElement("h2");
       title.textContent = post.title;
       button.append(title, status);
-      button.addEventListener("click", () => setRoute(`#blog/${post.id}`));
+      button.addEventListener("click", () => setRoute(`#blog/${getPostRoute(post)}`));
       blogPosts.append(button);
     });
     renderAuthorState();
@@ -1712,7 +1739,7 @@
       return;
     }
     const url = new URL(window.location.href);
-    url.hash = `blog/${selectedPost.id}`;
+    url.hash = `blog/${getPostRoute(selectedPost)}`;
     try {
       await navigator.clipboard.writeText(url.href);
       copyPostLinkButton.textContent = "Copied";
@@ -1758,7 +1785,7 @@
         throw new Error("Supabase did not authorize the deletion.");
       }
       window.history.replaceState(null, "", "#blog");
-      pendingPostId = null;
+      pendingPostRoute = null;
       await loadPosts();
     } catch (error) {
       console.error("Could not delete post:", error);
@@ -1833,6 +1860,9 @@
       if (editingPostId) {
         const updatedPost = posts.find(({ id }) => String(id) === editingPostId);
         if (updatedPost) {
+          const route = getPostRoute(updatedPost);
+          pendingPostRoute = route;
+          window.history.replaceState(null, "", `#blog/${route}`);
           openPost(updatedPost);
         }
       }
