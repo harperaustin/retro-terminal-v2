@@ -176,6 +176,13 @@ body {
   font-weight: 400;
 }
 
+.section-subtitle {
+  margin: 10px 0 0;
+  color: #aaa;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
 .gallery-shuffle-button {
   padding: 0;
   border: 0;
