@@ -730,7 +730,9 @@
     photoCaption.value = photo?.caption || "";
     photoTakenAt.value = photo?.taken_at || "";
     photoFile.required = !photo;
-    photoFileLabelText.textContent = photo ? "Replace photograph (optional)" : "Photograph";
+    photoFileLabelText.textContent = photo
+      ? "Replace photograph (optional)"
+      : "Photographs";
     photoDialogTitle.textContent = photo ? "Edit photograph" : "Upload photograph";
     deletePhotoButton.hidden = !photo;
     photoDialog.showModal();
@@ -947,6 +949,19 @@
   newPhotoButton.addEventListener("click", () => openPhotoEditor());
   shufflePhotosButton.addEventListener("click", () => renderPhotos(photos));
 
+  photoFile.addEventListener("change", () => {
+    if (photoId.value) {
+      photoFileLabelText.textContent = photoFile.files.length
+        ? "Replacement photograph selected"
+        : "Replace photograph (optional)";
+      return;
+    }
+    const count = photoFile.files.length;
+    photoFileLabelText.textContent = count
+      ? `${count} photograph${count === 1 ? "" : "s"} selected`
+      : "Photographs";
+  });
+
   photoForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!isVerifiedAuthor) {
@@ -955,23 +970,40 @@
     }
     photoError.textContent = "";
     const submitButton = photoForm.querySelector('[type="submit"]');
+    const originalSubmitText = submitButton.textContent;
     submitButton.disabled = true;
     try {
       const editingPhotoId = photoId.value;
       const editingPhoto = photos.find(({ id }) => String(id) === editingPhotoId);
-      const file = photoFile.files[0];
-      const imageUrl = file
-        ? await uploadImage(file, "photography", "Photograph", 12)
-        : editingPhoto?.image_url;
-      if (!imageUrl) {
-        throw new Error("Choose a photograph to upload.");
+      const files = Array.from(photoFile.files);
+      if (editingPhotoId && !editingPhoto) {
+        throw new Error("This photograph is no longer available to edit.");
       }
-      const photoValues = {
-        image_url: imageUrl,
+      if (editingPhotoId && files.length > 1) {
+        throw new Error("Choose at most one replacement when editing a photograph.");
+      }
+      if (!editingPhotoId && files.length === 0) {
+        throw new Error("Choose one or more photographs to upload.");
+      }
+      const imageUrls = [];
+      if (files.length) {
+        for (let index = 0; index < files.length; index += 1) {
+          submitButton.textContent = `Uploading ${index + 1} of ${files.length}…`;
+          imageUrls.push(await uploadImage(files[index], "photography", "Photograph", 12));
+        }
+      } else {
+        imageUrls.push(editingPhoto.image_url);
+      }
+      const sharedValues = {
         alt_text: photoAltText.value.trim() || null,
         caption: photoCaption.value.trim() || null,
         taken_at: photoTakenAt.value || null,
       };
+      const photoValues = imageUrls.map((imageUrl) => ({
+        image_url: imageUrl,
+        ...sharedValues,
+      }));
+      submitButton.textContent = "Saving…";
       const savedPhotos = await api(
         editingPhotoId
           ? `/rest/v1/photography_images?id=eq.${encodeURIComponent(editingPhotoId)}`
@@ -979,11 +1011,11 @@
         {
           method: editingPhotoId ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json", Prefer: "return=representation" },
-          body: JSON.stringify(photoValues),
+          body: JSON.stringify(editingPhotoId ? photoValues[0] : photoValues),
         },
         true,
       );
-      if (!Array.isArray(savedPhotos) || savedPhotos.length !== 1) {
+      if (!Array.isArray(savedPhotos) || savedPhotos.length !== photoValues.length) {
         throw new Error("Supabase did not authorize this change.");
       }
       photoDialog.close();
@@ -992,6 +1024,7 @@
       photoError.textContent = error.message;
     } finally {
       submitButton.disabled = false;
+      submitButton.textContent = originalSubmitText;
     }
   });
 

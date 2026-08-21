@@ -284,11 +284,17 @@
         <div class="blog-form-fields">
           <input id="photoId" type="hidden" />
           <label id="photoFileLabel">
-            <span id="photoFileLabelText">Photograph</span>
-            <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <span id="photoFileLabelText">Photographs</span>
+            <input
+              id="photoFile"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              required
+            />
           </label>
           <label>
-            Description for screen readers (optional)
+            Description for screen readers (optional; applies to the batch)
             <input
               id="photoAltText"
               type="text"
@@ -297,11 +303,11 @@
             />
           </label>
           <label>
-            Caption
+            Caption (optional; applies to the batch)
             <input id="photoCaption" type="text" maxlength="240" />
           </label>
           <label>
-            Date taken
+            Date taken (optional; applies to the batch)
             <input id="photoTakenAt" type="date" />
           </label>
           <p class="blog-form-error" id="photoError" role="alert"></p>
@@ -330,7 +336,7 @@
     </dialog>
 
     <script src="site-config.js?v=1"></script>
-    <script src="blog.js?v=12"></script>
+    <script src="blog.js?v=13"></script>
     <script src="redesign.js?v=10"></script>
   </body>
 </html>
