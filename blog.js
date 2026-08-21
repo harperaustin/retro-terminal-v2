@@ -858,22 +858,45 @@
     authorEmail.focus();
   }
 
+  let mobileNavigationPending = false;
+
   tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      if (tab.dataset.view === "blog") {
-        setRoute("#blog");
-      } else if (tab.dataset.view === "music") {
-        setRoute("#music");
-      } else if (tab.dataset.view === "photography") {
-        setRoute("#photography");
-      } else {
-        window.history.pushState(
-          null,
-          "",
-          `${window.location.pathname}${window.location.search}`,
-        );
-        applyRoute();
+    tab.addEventListener("click", (event) => {
+      const navigate = () => {
+        if (tab.dataset.view === "blog") {
+          setRoute("#blog");
+        } else if (tab.dataset.view === "music") {
+          setRoute("#music");
+        } else if (tab.dataset.view === "photography") {
+          setRoute("#photography");
+        } else {
+          window.history.pushState(
+            null,
+            "",
+            `${window.location.pathname}${window.location.search}`,
+          );
+          applyRoute();
+        }
+      };
+      const shouldAnimateFirst = (
+        tab.classList.contains("minimal-link")
+        && window.matchMedia("(hover: none), (pointer: coarse)").matches
+        && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+      if (shouldAnimateFirst) {
+        event.preventDefault();
+        if (mobileNavigationPending) {
+          return;
+        }
+        mobileNavigationPending = true;
+        tab.dispatchEvent(new CustomEvent("redesign:ripple"));
+        window.setTimeout(() => {
+          mobileNavigationPending = false;
+          navigate();
+        }, 560);
+        return;
       }
+      navigate();
     });
   });
 

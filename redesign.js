@@ -86,6 +86,9 @@
     element.addEventListener("focus", () => {
       startRipple(Math.floor(characters.length / 2));
     });
+    element.addEventListener("redesign:ripple", () => {
+      startRipple(Math.floor(characters.length / 2));
+    });
 
     window.addEventListener("redesign:home-visible", () => {
       timers.forEach((activeTimers) => {
