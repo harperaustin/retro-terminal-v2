@@ -8,7 +8,7 @@
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="stylesheet" href="modern.css?v=33" />
-    <link rel="stylesheet" href="redesign.css?v=6" />
+    <link rel="stylesheet" href="redesign.css?v=7" />
   </head>
   <body>
     <main class="minimal-shell">
@@ -19,7 +19,7 @@
           <button class="minimal-link terminal-tab" type="button" data-view="blog">blog</button>
           <a class="minimal-link" href="https://www.linkedin.com/in/harper-austin-523743276/">linkedin</a>
           <a class="minimal-link" href="https://github.com/harperaustin">github</a>
-          <a class="minimal-link" href="#music">music</a>
+          <button class="minimal-link terminal-tab" type="button" data-view="music">music</button>
           <a class="minimal-link" href="#photography">photography</a>
         </nav>
         <section class="minimal-about" id="aboutPanel" aria-hidden="true">
@@ -30,6 +30,30 @@
             </p>
           </div>
         </section>
+      </section>
+
+      <section class="music-view site-view" id="musicView" aria-labelledby="musicHeading" hidden>
+        <header class="blog-header">
+          <div>
+            <button class="blog-home-link terminal-tab" type="button" data-view="terminal">
+              ← back
+            </button>
+            <h1 id="musicHeading">Music</h1>
+          </div>
+          <div class="blog-actions">
+            <span class="blog-author-status" id="musicAuthorStatus" hidden>Author mode</span>
+            <button class="blog-action-button" id="musicLogoutButton" type="button" hidden>Log out</button>
+            <button class="blog-add-button" id="newReleaseButton" type="button" aria-label="Add a release" hidden>+</button>
+          </div>
+        </header>
+        <div class="blog-message" id="musicMessage" role="status">Loading releases…</div>
+        <div class="music-grid" id="musicReleases"></div>
+        <button
+          class="author-login-hotspot"
+          id="musicAuthorLoginHotspot"
+          type="button"
+          aria-label="Author login"
+        ></button>
       </section>
 
       <section class="blog-view site-view" id="blogView" aria-labelledby="blogHeading" hidden>
@@ -128,8 +152,84 @@
       </form>
     </dialog>
 
+    <dialog id="releaseDialog" aria-labelledby="releaseDialogTitle">
+      <form class="blog-dialog-form" id="releaseForm">
+        <div class="dialog-header">
+          <h2 id="releaseDialogTitle">Add release</h2>
+          <button
+            class="dialog-close-button"
+            type="button"
+            data-close-dialog="releaseDialog"
+            aria-label="Close editor"
+          >×</button>
+        </div>
+        <div class="blog-form-fields">
+          <input id="releaseId" type="hidden" />
+          <label>
+            Spotify URL
+            <span class="release-import-row">
+              <input id="releaseSpotifyUrl" type="url" placeholder="https://open.spotify.com/album/…" />
+              <button class="blog-secondary-button" id="importSpotifyButton" type="button">
+                Import details
+              </button>
+            </span>
+          </label>
+          <div class="release-field-grid">
+            <label>
+              Release name
+              <input id="releaseTitle" type="text" maxlength="160" required />
+            </label>
+            <label>
+              Type
+              <select id="releaseType">
+                <option value="album">Album</option>
+                <option value="single">Single</option>
+                <option value="ep">EP</option>
+              </select>
+            </label>
+            <label>
+              Release date
+              <input id="releaseDate" type="date" />
+            </label>
+          </div>
+          <label>
+            Cover image URL
+            <input id="releaseCoverUrl" type="url" placeholder="Filled automatically from Spotify" />
+          </label>
+          <label>
+            Or upload cover artwork
+            <input id="releaseCoverFile" type="file" accept="image/jpeg,image/png,image/webp" />
+          </label>
+          <div class="release-field-grid">
+            <label>
+              Apple Music URL
+              <input id="releaseAppleMusicUrl" type="url" />
+            </label>
+            <label>
+              Bandcamp URL
+              <input id="releaseBandcampUrl" type="url" />
+            </label>
+            <label>
+              SoundCloud URL
+              <input id="releaseSoundcloudUrl" type="url" />
+            </label>
+          </div>
+          <p class="blog-form-error" id="releaseError" role="alert"></p>
+          <div class="blog-save-actions">
+            <button
+              class="blog-secondary-button blog-delete-button"
+              id="deleteReleaseButton"
+              type="button"
+              hidden
+            >Delete</button>
+            <button class="blog-primary-button" type="submit">Save release</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
     <script src="site-config.js?v=1"></script>
-    <script src="blog.js?v=7"></script>
-    <script src="redesign.js?v=6"></script>
+    <script src="blog.js?v=8"></script>
+    <script src="redesign.js?v=7"></script>
   </body>
 </html>

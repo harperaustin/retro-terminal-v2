@@ -1,7 +1,10 @@
 (() => {
   const authorLoginHotspot = document.querySelector("#authorLoginHotspot");
-  authorLoginHotspot.addEventListener("click", () => {
-    window.dispatchEvent(new CustomEvent("terminal:author-login"));
+  const musicAuthorLoginHotspot = document.querySelector("#musicAuthorLoginHotspot");
+  [authorLoginHotspot, musicAuthorLoginHotspot].forEach((hotspot) => {
+    hotspot.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("terminal:author-login"));
+    });
   });
 
   const aboutLink = document.querySelector('a[href="#about"]');

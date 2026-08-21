@@ -28,6 +28,10 @@ returns drafts to an authorized author.
 The Blog index is shareable at `/#blog`, and opening a post creates a durable
 `/#blog/POST_ID` URL with a one-click copy control.
 
+The **Music** page displays albums, EPs, and singles with links to their
+streaming platforms. Authorized authors can import release names and cover art
+from Spotify, edit the metadata, or upload cover artwork directly.
+
 ## Configure the blog
 
 1. Create a Supabase project and run `supabase/schema.sql` in its SQL editor.
@@ -44,6 +48,8 @@ The Blog index is shareable at `/#blog`, and opening a post creates a durable
 
 For an existing blog database created before draft support, run
 `supabase/add-drafts.sql` once in the Supabase SQL editor.
+To add the music catalog to an existing database, run
+`supabase/add-music.sql` once in the Supabase SQL editor.
 
 Row-level security allows everyone to read published posts but only users
 listed in `blog_authors` to create, edit, or delete them.

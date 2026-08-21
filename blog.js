@@ -8,6 +8,7 @@
   const tabs = document.querySelectorAll(".terminal-tab");
   const terminalView = document.querySelector("#terminalView");
   const blogView = document.querySelector("#blogView");
+  const musicView = document.querySelector("#musicView");
   const blogPosts = document.querySelector("#blogPosts");
   const blogMessage = document.querySelector("#blogMessage");
   const blogDetail = document.querySelector("#blogDetail");
@@ -36,6 +37,27 @@
   const postDialogTitle = document.querySelector("#postDialogTitle");
   const saveDraftButton = document.querySelector("#saveDraftButton");
   const savePostButton = document.querySelector("#savePostButton");
+  const musicReleases = document.querySelector("#musicReleases");
+  const musicMessage = document.querySelector("#musicMessage");
+  const musicAuthorStatus = document.querySelector("#musicAuthorStatus");
+  const musicLogoutButton = document.querySelector("#musicLogoutButton");
+  const newReleaseButton = document.querySelector("#newReleaseButton");
+  const releaseDialog = document.querySelector("#releaseDialog");
+  const releaseForm = document.querySelector("#releaseForm");
+  const releaseDialogTitle = document.querySelector("#releaseDialogTitle");
+  const releaseId = document.querySelector("#releaseId");
+  const releaseTitle = document.querySelector("#releaseTitle");
+  const releaseType = document.querySelector("#releaseType");
+  const releaseDate = document.querySelector("#releaseDate");
+  const releaseSpotifyUrl = document.querySelector("#releaseSpotifyUrl");
+  const releaseAppleMusicUrl = document.querySelector("#releaseAppleMusicUrl");
+  const releaseBandcampUrl = document.querySelector("#releaseBandcampUrl");
+  const releaseSoundcloudUrl = document.querySelector("#releaseSoundcloudUrl");
+  const releaseCoverUrl = document.querySelector("#releaseCoverUrl");
+  const releaseCoverFile = document.querySelector("#releaseCoverFile");
+  const importSpotifyButton = document.querySelector("#importSpotifyButton");
+  const deleteReleaseButton = document.querySelector("#deleteReleaseButton");
+  const releaseError = document.querySelector("#releaseError");
   let session = readSession();
   let isVerifiedAuthor = false;
   let authorCheckPromise;
@@ -43,6 +65,8 @@
   let posts = [];
   let selectedPost = null;
   let pendingPostId = null;
+  let releasesLoaded = false;
+  let releases = [];
 
   function readSession() {
     try {
@@ -69,14 +93,21 @@
     newPostButton.hidden = !isVerifiedAuthor;
     logoutButton.hidden = !isVerifiedAuthor;
     blogDetailActions.hidden = !isVerifiedAuthor || !selectedPost;
+    musicAuthorStatus.hidden = !isVerifiedAuthor;
+    musicLogoutButton.hidden = !isVerifiedAuthor;
+    newReleaseButton.hidden = !isVerifiedAuthor;
+    renderReleases(releases);
   }
 
   function setView(name) {
     const showBlog = name === "blog";
-    terminalView.hidden = showBlog;
-    terminalView.classList.toggle("is-active", !showBlog);
+    const showMusic = name === "music";
+    terminalView.hidden = showBlog || showMusic;
+    terminalView.classList.toggle("is-active", name === "terminal");
     blogView.hidden = !showBlog;
     blogView.classList.toggle("is-active", showBlog);
+    musicView.hidden = !showMusic;
+    musicView.classList.toggle("is-active", showMusic);
     tabs.forEach((tab) => {
       const isActive = tab.dataset.view === name;
       tab.classList.toggle("is-active", isActive);
@@ -84,6 +115,14 @@
     });
     if (showBlog && !postsLoaded) {
       loadPosts();
+    }
+    if (showMusic && !releasesLoaded) {
+      loadReleases();
+    }
+    if (name === "terminal") {
+      document.title = "Harper Austin";
+    } else if (name === "music") {
+      document.title = "Music — Harper Austin";
     }
   }
 
@@ -96,6 +135,12 @@
   }
 
   function applyRoute() {
+    if (window.location.hash === "#music") {
+      pendingPostId = null;
+      setView("music");
+      document.title = "Music — Harper Austin";
+      return;
+    }
     const match = window.location.hash.match(/^#blog(?:\/(\d+))?$/);
     if (!match) {
       pendingPostId = null;
@@ -198,6 +243,9 @@
         renderAuthorState();
         if (!blogView.hidden && postsLoaded) {
           await loadPosts();
+        }
+        if (!musicView.hidden && releasesLoaded) {
+          await loadReleases();
         }
       }
       return isVerifiedAuthor;
@@ -435,6 +483,175 @@
     }
   }
 
+  function normalizeHttpUrl(value, label) {
+    if (!value) {
+      return null;
+    }
+    let url;
+    try {
+      url = new URL(value);
+    } catch {
+      throw new Error(`${label} must be a valid URL.`);
+    }
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new Error(`${label} must use http or https.`);
+    }
+    return url.href;
+  }
+
+  function createPlatformLink(label, value) {
+    let url;
+    try {
+      url = normalizeHttpUrl(value, label);
+    } catch {
+      return null;
+    }
+    if (!url) {
+      return null;
+    }
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = label;
+    return link;
+  }
+
+  function openReleaseEditor(release = null) {
+    if (!isVerifiedAuthor) {
+      return;
+    }
+    releaseForm.reset();
+    releaseError.textContent = "";
+    releaseId.value = release?.id || "";
+    releaseTitle.value = release?.title || "";
+    releaseType.value = release?.release_type || "album";
+    releaseDate.value = release?.release_date || "";
+    releaseSpotifyUrl.value = release?.spotify_url || "";
+    releaseAppleMusicUrl.value = release?.apple_music_url || "";
+    releaseBandcampUrl.value = release?.bandcamp_url || "";
+    releaseSoundcloudUrl.value = release?.soundcloud_url || "";
+    releaseCoverUrl.value = release?.cover_url || "";
+    releaseDialogTitle.textContent = release ? "Edit release" : "Add release";
+    deleteReleaseButton.hidden = !release;
+    releaseDialog.showModal();
+    (release ? releaseTitle : releaseSpotifyUrl).focus();
+  }
+
+  function renderReleases(nextReleases) {
+    if (!releasesLoaded) {
+      return;
+    }
+    releases = nextReleases;
+    musicReleases.replaceChildren();
+    if (releases.length === 0) {
+      musicMessage.textContent = "No releases yet.";
+      musicMessage.hidden = false;
+      return;
+    }
+    musicMessage.hidden = true;
+    releases.forEach((release) => {
+      const article = document.createElement("article");
+      article.className = "music-release";
+
+      let coverUrl = null;
+      try {
+        coverUrl = normalizeHttpUrl(release.cover_url, "Cover image URL");
+      } catch {
+        // Render the placeholder when stored artwork is no longer a valid URL.
+      }
+      if (coverUrl) {
+        const image = document.createElement("img");
+        image.src = coverUrl;
+        image.alt = `${release.title} cover artwork`;
+        image.loading = "lazy";
+        article.append(image);
+      } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "music-cover-placeholder";
+        placeholder.textContent = release.title.slice(0, 1);
+        article.append(placeholder);
+      }
+
+      const title = document.createElement("h2");
+      title.textContent = release.title;
+      const metadata = document.createElement("p");
+      const year = release.release_date ? new Date(`${release.release_date}T00:00:00`).getFullYear() : "";
+      metadata.textContent = [release.release_type, year].filter(Boolean).join(" · ");
+
+      const links = document.createElement("div");
+      links.className = "music-platforms";
+      [
+        createPlatformLink("Spotify", release.spotify_url),
+        createPlatformLink("Apple Music", release.apple_music_url),
+        createPlatformLink("Bandcamp", release.bandcamp_url),
+        createPlatformLink("SoundCloud", release.soundcloud_url),
+      ].filter(Boolean).forEach((link) => links.append(link));
+
+      article.append(title, metadata, links);
+      if (isVerifiedAuthor) {
+        const editButton = document.createElement("button");
+        editButton.className = "music-edit-button";
+        editButton.type = "button";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", () => openReleaseEditor(release));
+        article.append(editButton);
+      }
+      musicReleases.append(article);
+    });
+  }
+
+  async function loadReleases() {
+    releasesLoaded = true;
+    if (!isConfigured) {
+      musicMessage.textContent = "Music setup is not complete yet.";
+      return;
+    }
+    musicMessage.hidden = false;
+    musicMessage.textContent = "Loading releases…";
+    try {
+      const nextReleases = await api(
+        "/rest/v1/music_releases?select=*&order=release_date.desc.nullslast,created_at.desc",
+        {},
+        isVerifiedAuthor,
+      );
+      renderReleases(nextReleases);
+    } catch (error) {
+      musicMessage.textContent = `Could not load releases: ${error.message}`;
+    }
+  }
+
+  async function uploadCover(file) {
+    if (file.size > 8 * 1024 * 1024) {
+      throw new Error("Cover artwork must be smaller than 8 MB.");
+    }
+    const extensionByType = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+    };
+    const extension = extensionByType[file.type];
+    if (!extension) {
+      throw new Error("Cover artwork must be a JPG, PNG, or WebP image.");
+    }
+    const objectPath = `${crypto.randomUUID()}.${extension}`;
+    const response = await fetch(`${supabaseUrl}/storage/v1/object/music-covers/${objectPath}`, {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        Authorization: "Bearer " + session.access_token,
+        "Content-Type": file.type,
+        "x-upsert": "false",
+      },
+      body: file,
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.message || body.error || "Could not upload cover artwork.");
+    }
+    return `${supabaseUrl}/storage/v1/object/public/music-covers/${objectPath}`;
+  }
+
   async function openAuthorLogin() {
     if (!isConfigured) {
       window.dispatchEvent(
@@ -446,7 +663,6 @@
     }
     await authorCheckPromise;
     if (isVerifiedAuthor) {
-      setView("blog");
       return;
     }
     authorError.textContent = "";
@@ -458,6 +674,8 @@
     tab.addEventListener("click", () => {
       if (tab.dataset.view === "blog") {
         setRoute("#blog");
+      } else if (tab.dataset.view === "music") {
+        setRoute("#music");
       } else {
         window.history.pushState(
           null,
@@ -509,7 +727,10 @@
       authorPassword.value = "";
       authorDialog.close();
       await loadPosts();
-      setView("blog");
+      if (releasesLoaded) {
+        await loadReleases();
+      }
+      applyRoute();
     } catch (error) {
       authorError.textContent = error.message;
     } finally {
@@ -529,6 +750,131 @@
     savePostButton.textContent = "Publish post";
     postDialog.showModal();
     postTitle.focus();
+  });
+
+  newReleaseButton.addEventListener("click", () => openReleaseEditor());
+
+  importSpotifyButton.addEventListener("click", async () => {
+    const spotifyValue = releaseSpotifyUrl.value.trim();
+    if (!spotifyValue) {
+      releaseError.textContent = "Paste a Spotify release URL first.";
+      return;
+    }
+    releaseError.textContent = "";
+    importSpotifyButton.disabled = true;
+    importSpotifyButton.textContent = "Importing…";
+    try {
+      const spotifyUrl = normalizeHttpUrl(spotifyValue, "Spotify URL");
+      const parsedSpotifyUrl = new URL(spotifyUrl);
+      if (
+        parsedSpotifyUrl.hostname !== "open.spotify.com"
+        || !/^\/(?:intl-[^/]+\/)?(?:album|track)\//.test(parsedSpotifyUrl.pathname)
+      ) {
+        throw new Error("Use an open.spotify.com album or track URL.");
+      }
+      releaseSpotifyUrl.value = spotifyUrl;
+      const response = await fetch(
+        `https://open.spotify.com/oembed?url=${encodeURIComponent(spotifyUrl)}`,
+      );
+      if (!response.ok) {
+        throw new Error("Spotify could not find that release.");
+      }
+      const metadata = await response.json();
+      releaseTitle.value = metadata.title || releaseTitle.value;
+      releaseCoverUrl.value = metadata.thumbnail_url || releaseCoverUrl.value;
+      if (/\/album\//.test(spotifyUrl)) {
+        releaseType.value = "album";
+      } else if (/\/track\//.test(spotifyUrl)) {
+        releaseType.value = "single";
+      }
+    } catch (error) {
+      releaseError.textContent = `Could not import Spotify details: ${error.message}`;
+    } finally {
+      importSpotifyButton.disabled = false;
+      importSpotifyButton.textContent = "Import details";
+    }
+  });
+
+  releaseForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!isVerifiedAuthor) {
+      releaseError.textContent = "Your author session is not authorized.";
+      return;
+    }
+    releaseError.textContent = "";
+    const submitButton = releaseForm.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      const coverFile = releaseCoverFile.files[0];
+      const coverUrl = coverFile
+        ? await uploadCover(coverFile)
+        : normalizeHttpUrl(releaseCoverUrl.value.trim(), "Cover image URL");
+      if (!coverUrl) {
+        throw new Error("Add cover artwork with Spotify import, a URL, or an upload.");
+      }
+      const editingReleaseId = releaseId.value;
+      const releaseValues = {
+        title: releaseTitle.value.trim(),
+        release_type: releaseType.value,
+        release_date: releaseDate.value || null,
+        cover_url: coverUrl,
+        spotify_url: normalizeHttpUrl(releaseSpotifyUrl.value.trim(), "Spotify URL"),
+        apple_music_url: normalizeHttpUrl(releaseAppleMusicUrl.value.trim(), "Apple Music URL"),
+        bandcamp_url: normalizeHttpUrl(releaseBandcampUrl.value.trim(), "Bandcamp URL"),
+        soundcloud_url: normalizeHttpUrl(
+          releaseSoundcloudUrl.value.trim(),
+          "SoundCloud URL",
+        ),
+      };
+      const savedReleases = await api(
+        editingReleaseId
+          ? `/rest/v1/music_releases?id=eq.${encodeURIComponent(editingReleaseId)}`
+          : "/rest/v1/music_releases",
+        {
+          method: editingReleaseId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+          body: JSON.stringify(releaseValues),
+        },
+        true,
+      );
+      if (!Array.isArray(savedReleases) || savedReleases.length !== 1) {
+        throw new Error("Supabase did not authorize this change.");
+      }
+      releaseDialog.close();
+      await loadReleases();
+    } catch (error) {
+      releaseError.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  deleteReleaseButton.addEventListener("click", async () => {
+    const editingRelease = releases.find(({ id }) => String(id) === releaseId.value);
+    if (
+      !isVerifiedAuthor
+      || !editingRelease
+      || !window.confirm(`Delete “${editingRelease.title}”? This cannot be undone.`)
+    ) {
+      return;
+    }
+    deleteReleaseButton.disabled = true;
+    try {
+      const deletedReleases = await api(
+        `/rest/v1/music_releases?id=eq.${encodeURIComponent(editingRelease.id)}`,
+        { method: "DELETE", headers: { Prefer: "return=representation" } },
+        true,
+      );
+      if (!Array.isArray(deletedReleases) || deletedReleases.length !== 1) {
+        throw new Error("Supabase did not authorize the deletion.");
+      }
+      releaseDialog.close();
+      await loadReleases();
+    } catch (error) {
+      releaseError.textContent = error.message;
+    } finally {
+      deleteReleaseButton.disabled = false;
+    }
   });
 
   blogBackButton.addEventListener("click", () => setRoute("#blog"));
@@ -670,7 +1016,7 @@
     }
   });
 
-  logoutButton.addEventListener("click", async () => {
+  async function logout() {
     if (session?.access_token) {
       try {
         await fetch(`${supabaseUrl}/auth/v1/logout`, {
@@ -680,9 +1026,15 @@
       } finally {
         saveSession(null);
         await loadPosts();
+        if (releasesLoaded) {
+          await loadReleases();
+        }
       }
     }
-  });
+  }
+
+  logoutButton.addEventListener("click", logout);
+  musicLogoutButton.addEventListener("click", logout);
 
   window.addEventListener("terminal:author-login", () => {
     openAuthorLogin();
