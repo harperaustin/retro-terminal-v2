@@ -234,6 +234,12 @@ body {
   color: #777;
 }
 
+.photo-loading-note {
+  margin: -28px 0 32px;
+  color: #bbb;
+  font-size: 11px;
+}
+
 .loading-character {
   display: inline-block;
   min-width: 0.18em;

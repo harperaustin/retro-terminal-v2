@@ -62,6 +62,7 @@
   const photoGallery = document.querySelector("#photoGallery");
   const photoCarouselStatus = document.querySelector("#photoCarouselStatus");
   const photoMessage = document.querySelector("#photoMessage");
+  const photoLoadingNote = document.querySelector("#photoLoadingNote");
   const photoAuthorStatus = document.querySelector("#photoAuthorStatus");
   const photoLogoutButton = document.querySelector("#photoLogoutButton");
   const newPhotoButton = document.querySelector("#newPhotoButton");
@@ -108,13 +109,27 @@
   const photoDimensions = new Map();
 
   function setStatus(element, message, isLoading = false) {
+    if (!element) {
+      console.error("Could not display page status:", message);
+      return;
+    }
     element.classList.toggle("is-loading", isLoading);
     element.textContent = message;
+    if (element === photoMessage && photoLoadingNote) {
+      photoLoadingNote.hidden = !isLoading;
+    }
     window.dispatchEvent(
       new CustomEvent("redesign:loading-status", {
         detail: { element, isLoading },
       }),
     );
+  }
+
+  function showSafeError(element, message, error) {
+    console.error(message, error);
+    if (element) {
+      element.textContent = message;
+    }
   }
 
   function readSession() {
@@ -574,7 +589,8 @@
       renderPosts(posts);
       showRoutedPost();
     } catch (error) {
-      setStatus(blogMessage, `Could not load posts: ${error.message}`);
+      console.error("Could not load posts:", error);
+      setStatus(blogMessage, "Could not load posts. Please refresh and try again.");
     }
   }
 
@@ -713,7 +729,8 @@
       );
       renderReleases(nextReleases);
     } catch (error) {
-      setStatus(musicMessage, `Could not load releases: ${error.message}`);
+      console.error("Could not load releases:", error);
+      setStatus(musicMessage, "Could not load music. Please refresh and try again.");
     }
   }
 
@@ -1148,7 +1165,8 @@
       await preloadPhotos(nextPhotos);
       renderPhotos(sortPhotos(nextPhotos));
     } catch (error) {
-      setStatus(photoMessage, `Could not load photographs: ${error.message}`);
+      console.error("Could not load photographs:", error);
+      setStatus(photoMessage, "Could not load photographs. Please refresh and try again.");
     }
   }
 
@@ -1273,7 +1291,11 @@
       }
       applyRoute();
     } catch (error) {
-      authorError.textContent = error.message;
+      showSafeError(
+        authorError,
+        "Could not log in. Check your credentials and try again.",
+        error,
+      );
     } finally {
       submitButton.disabled = false;
     }
@@ -1326,7 +1348,7 @@
       aboutText.textContent = savedRows[0].content;
       aboutDialog.close();
     } catch (error) {
-      aboutError.textContent = error.message;
+      showSafeError(aboutError, "Could not save the About text. Please try again.", error);
     } finally {
       submitButton.disabled = false;
     }
@@ -1400,7 +1422,7 @@
       photoOrderDialog.close();
       await loadPhotos();
     } catch (error) {
-      photoOrderError.textContent = error.message;
+      showSafeError(photoOrderError, "Could not save the photo order. Please try again.", error);
     } finally {
       submitButton.disabled = false;
     }
@@ -1478,7 +1500,7 @@
       photoDialog.close();
       await loadPhotos();
     } catch (error) {
-      photoError.textContent = error.message;
+      showSafeError(photoError, "Could not save the photographs. Please try again.", error);
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = originalSubmitText;
@@ -1507,7 +1529,7 @@
       photoDialog.close();
       await loadPhotos();
     } catch (error) {
-      photoError.textContent = error.message;
+      showSafeError(photoError, "Could not delete the photograph. Please try again.", error);
     } finally {
       deletePhotoButton.disabled = false;
     }
@@ -1547,7 +1569,11 @@
         releaseType.value = "single";
       }
     } catch (error) {
-      releaseError.textContent = `Could not import Spotify details: ${error.message}`;
+      showSafeError(
+        releaseError,
+        "Could not import Spotify details. Check the URL and try again.",
+        error,
+      );
     } finally {
       importSpotifyButton.disabled = false;
       importSpotifyButton.textContent = "Import details";
@@ -1602,7 +1628,7 @@
       releaseDialog.close();
       await loadReleases();
     } catch (error) {
-      releaseError.textContent = error.message;
+      showSafeError(releaseError, "Could not save the release. Please try again.", error);
     } finally {
       submitButton.disabled = false;
     }
@@ -1630,7 +1656,7 @@
       releaseDialog.close();
       await loadReleases();
     } catch (error) {
-      releaseError.textContent = error.message;
+      showSafeError(releaseError, "Could not delete the release. Please try again.", error);
     } finally {
       deleteReleaseButton.disabled = false;
     }
@@ -1692,7 +1718,8 @@
       pendingPostId = null;
       await loadPosts();
     } catch (error) {
-      window.alert(`Could not delete post: ${error.message}`);
+      console.error("Could not delete post:", error);
+      window.alert("Could not delete the post. Please try again.");
     } finally {
       deletePostButton.disabled = false;
     }
@@ -1767,7 +1794,7 @@
         }
       }
     } catch (error) {
-      postError.textContent = error.message;
+      showSafeError(postError, "Could not save the post. Please try again.", error);
     } finally {
       submitButtons.forEach((button) => {
         button.disabled = false;
