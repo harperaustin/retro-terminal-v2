@@ -66,6 +66,7 @@
   const photoLogoutButton = document.querySelector("#photoLogoutButton");
   const newPhotoButton = document.querySelector("#newPhotoButton");
   const shufflePhotosButton = document.querySelector("#shufflePhotosButton");
+  const arrangePhotosButton = document.querySelector("#arrangePhotosButton");
   const photoDialog = document.querySelector("#photoDialog");
   const photoForm = document.querySelector("#photoForm");
   const photoDialogTitle = document.querySelector("#photoDialogTitle");
@@ -77,6 +78,11 @@
   const photoTakenAt = document.querySelector("#photoTakenAt");
   const photoError = document.querySelector("#photoError");
   const deletePhotoButton = document.querySelector("#deletePhotoButton");
+  const photoOrderDialog = document.querySelector("#photoOrderDialog");
+  const photoOrderForm = document.querySelector("#photoOrderForm");
+  const photoOrderList = document.querySelector("#photoOrderList");
+  const photoOrderError = document.querySelector("#photoOrderError");
+  const noHeroPhoto = document.querySelector("#noHeroPhoto");
   const photoLightbox = document.querySelector("#photoLightbox");
   const photoLightboxImage = document.querySelector("#photoLightboxImage");
   const photoLightboxCaption = document.querySelector("#photoLightboxCaption");
@@ -144,6 +150,7 @@
     photoAuthorStatus.hidden = !isVerifiedAuthor;
     photoLogoutButton.hidden = !isVerifiedAuthor;
     newPhotoButton.hidden = !isVerifiedAuthor;
+    arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 2;
     renderPhotos(photos);
     aboutAuthorActions.hidden = !isVerifiedAuthor;
   }
@@ -795,8 +802,10 @@
       return;
     }
 
-    const portraits = cards.filter((card) => card.dataset.orientation === "portrait");
-    const landscapes = cards.filter((card) => card.dataset.orientation === "landscape");
+    const heroCard = cards.find((card) => card.dataset.hero === "true");
+    const remainingCards = heroCard ? cards.filter((card) => card !== heroCard) : cards;
+    const portraits = remainingCards.filter((card) => card.dataset.orientation === "portrait");
+    const landscapes = remainingCards.filter((card) => card.dataset.orientation === "landscape");
     const groups = [];
     let groupIndex = 0;
 
@@ -813,6 +822,13 @@
       group.append(...slides);
       groups.push(group);
       groupIndex += 1;
+    }
+
+    if (heroCard) {
+      createGroup(
+        "photo-group-hero",
+        [createSlide("photo-slide-full", [heroCard])],
+      );
     }
 
     while (portraits.length || landscapes.length) {
@@ -884,6 +900,7 @@
     photos = nextPhotos;
     photoGallery.replaceChildren();
     shufflePhotosButton.hidden = photos.length < 2;
+    arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 2;
     if (photos.length === 0) {
       setStatus(photoMessage, "No photographs yet.");
       photoMessage.hidden = false;
@@ -896,6 +913,7 @@
     orderedPhotos.forEach((photo, index) => {
       const figure = document.createElement("figure");
       figure.className = "photo-card";
+      figure.dataset.hero = String(Boolean(photo.is_hero));
       figure.style.setProperty("--photo-delay", `${Math.min(index * 55, 440)}ms`);
       const dimensions = photoDimensions.get(photo.id);
       const hasKnownDimensions = Boolean(dimensions);
@@ -963,6 +981,97 @@
     window.requestAnimationFrame(arrangePhotoSlides);
   }
 
+  function renderPhotoOrderEditor() {
+    photoOrderList.replaceChildren();
+    noHeroPhoto.checked = !photos.some((photo) => photo.is_hero);
+    photos.forEach((photo, index) => {
+      const item = document.createElement("div");
+      item.className = "photo-order-item";
+      item.dataset.photoId = photo.id;
+      item.draggable = true;
+
+      const image = document.createElement("img");
+      image.src = photo.image_url;
+      image.alt = "";
+      image.loading = "lazy";
+
+      const label = document.createElement("span");
+      label.textContent = photo.caption || photo.alt_text || `photograph ${index + 1}`;
+
+      const heroLabel = document.createElement("label");
+      heroLabel.className = "photo-order-hero";
+      const heroInput = document.createElement("input");
+      heroInput.type = "radio";
+      heroInput.name = "heroPhoto";
+      heroInput.value = photo.id;
+      heroInput.checked = Boolean(photo.is_hero);
+      heroLabel.append(heroInput, " hero");
+
+      const buttons = document.createElement("div");
+      buttons.className = "photo-order-buttons";
+      const upButton = document.createElement("button");
+      upButton.type = "button";
+      upButton.textContent = "↑";
+      upButton.setAttribute("aria-label", `Move ${label.textContent} earlier`);
+      upButton.addEventListener("click", () => {
+        const previousItem = item.previousElementSibling;
+        if (previousItem) {
+          photoOrderList.insertBefore(item, previousItem);
+        }
+      });
+      const downButton = document.createElement("button");
+      downButton.type = "button";
+      downButton.textContent = "↓";
+      downButton.setAttribute("aria-label", `Move ${label.textContent} later`);
+      downButton.addEventListener("click", () => {
+        const nextItem = item.nextElementSibling;
+        if (nextItem) {
+          photoOrderList.insertBefore(nextItem, item);
+        }
+      });
+      buttons.append(upButton, downButton);
+
+      item.addEventListener("dragstart", () => {
+        item.classList.add("is-dragging");
+      });
+      item.addEventListener("dragend", () => {
+        item.classList.remove("is-dragging");
+      });
+      item.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        const draggedItem = photoOrderList.querySelector(".is-dragging");
+        if (!draggedItem || draggedItem === item) {
+          return;
+        }
+        const bounds = item.getBoundingClientRect();
+        const insertAfter = event.clientY > bounds.top + bounds.height / 2;
+        photoOrderList.insertBefore(
+          draggedItem,
+          insertAfter ? item.nextElementSibling : item,
+        );
+      });
+
+      item.append(image, label, heroLabel, buttons);
+      photoOrderList.append(item);
+    });
+  }
+
+  function sortPhotos(nextPhotos) {
+    return [...nextPhotos].sort((first, second) => {
+      const heroDifference = Number(Boolean(second.is_hero)) - Number(Boolean(first.is_hero));
+      if (heroDifference) {
+        return heroDifference;
+      }
+      const firstOrder = first.display_order ?? Number.MAX_SAFE_INTEGER;
+      const secondOrder = second.display_order ?? Number.MAX_SAFE_INTEGER;
+      if (firstOrder !== secondOrder) {
+        return firstOrder - secondOrder;
+      }
+      const dateDifference = new Date(second.created_at) - new Date(first.created_at);
+      return dateDifference || Number(second.id) - Number(first.id);
+    });
+  }
+
   async function preloadPhotos(nextPhotos) {
     let nextIndex = 0;
 
@@ -1007,7 +1116,7 @@
       );
       photoDimensions.clear();
       await preloadPhotos(nextPhotos);
-      renderPhotos(nextPhotos);
+      renderPhotos(sortPhotos(nextPhotos));
     } catch (error) {
       setStatus(photoMessage, `Could not load photographs: ${error.message}`);
     }
@@ -1210,6 +1319,45 @@
   newReleaseButton.addEventListener("click", () => openReleaseEditor());
   newPhotoButton.addEventListener("click", () => openPhotoEditor());
   shufflePhotosButton.addEventListener("click", () => renderPhotos(photos, true));
+  arrangePhotosButton.addEventListener("click", () => {
+    if (!isVerifiedAuthor) {
+      return;
+    }
+    photoOrderError.textContent = "";
+    renderPhotoOrderEditor();
+    photoOrderDialog.showModal();
+  });
+
+  photoOrderForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!isVerifiedAuthor) {
+      photoOrderError.textContent = "Your author session is not authorized.";
+      return;
+    }
+    const photoIds = Array.from(photoOrderList.children, (item) => Number(item.dataset.photoId));
+    const selectedHero = photoOrderForm.querySelector('input[name="heroPhoto"]:checked');
+    const heroId = selectedHero?.value ? Number(selectedHero.value) : null;
+    const submitButton = photoOrderForm.querySelector('[type="submit"]');
+    photoOrderError.textContent = "";
+    submitButton.disabled = true;
+    try {
+      await api(
+        "/rest/v1/rpc/update_photography_order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photo_ids: photoIds, hero_id: heroId }),
+        },
+        true,
+      );
+      photoOrderDialog.close();
+      await loadPhotos();
+    } catch (error) {
+      photoOrderError.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
 
   photoFile.addEventListener("change", () => {
     if (photoId.value) {

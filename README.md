@@ -58,6 +58,8 @@ For an existing blog database created before draft support, run
 To add the music catalog to an existing database, run
 `supabase/add-music.sql` once in the Supabase SQL editor.
 To add the photography gallery, run `supabase/add-photography.sql` once.
+To enable author-controlled photo ordering, run
+`supabase/add-photo-ordering.sql` once.
 To enable homepage content editing, run `supabase/add-site-content.sql` once.
 
 Row-level security allows everyone to read published posts but only users

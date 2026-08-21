@@ -8,7 +8,7 @@
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=3" type="image/svg+xml" />
     <link rel="stylesheet" href="modern.css?v=33" />
-    <link rel="stylesheet" href="redesign.css?v=14" />
+    <link rel="stylesheet" href="redesign.css?v=15" />
   </head>
   <body>
     <main class="minimal-shell">
@@ -89,6 +89,12 @@
             <button class="gallery-shuffle-button" id="shufflePhotosButton" type="button">
               shuffle
             </button>
+            <button
+              class="gallery-shuffle-button"
+              id="arrangePhotosButton"
+              type="button"
+              hidden
+            >arrange</button>
             <span class="blog-author-status" id="photoAuthorStatus" hidden>Author mode</span>
             <button class="blog-action-button" id="photoLogoutButton" type="button" hidden>
               Log out
@@ -170,6 +176,32 @@
           </label>
           <p class="blog-form-error" id="authorError" role="alert"></p>
           <button class="blog-primary-button" type="submit">Log in</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="photoOrderDialog" aria-labelledby="photoOrderDialogTitle">
+      <form class="blog-dialog-form" id="photoOrderForm">
+        <div class="dialog-header">
+          <h2 id="photoOrderDialogTitle">Arrange photographs</h2>
+          <button
+            class="dialog-close-button"
+            type="button"
+            data-close-dialog="photoOrderDialog"
+            aria-label="Close arranger"
+          >×</button>
+        </div>
+        <div class="photo-order-content">
+          <p>Drag photographs or use the arrows. The optional hero always appears first.</p>
+          <label class="photo-order-no-hero">
+            <input id="noHeroPhoto" type="radio" name="heroPhoto" value="" />
+            no hero
+          </label>
+          <div class="photo-order-list" id="photoOrderList"></div>
+          <p class="blog-form-error" id="photoOrderError" role="alert"></p>
+          <div class="blog-save-actions">
+            <button class="blog-primary-button" type="submit">Save order</button>
+          </div>
         </div>
       </form>
     </dialog>
@@ -375,7 +407,7 @@
     </dialog>
 
     <script src="site-config.js?v=1"></script>
-    <script src="blog.js?v=22"></script>
+    <script src="blog.js?v=23"></script>
     <script src="redesign.js?v=14"></script>
   </body>
 </html>
