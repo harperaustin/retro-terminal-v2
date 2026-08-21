@@ -8,7 +8,7 @@
     <title>Harper Austin</title>
     <link rel="icon" href="favicon.svg?v=3" type="image/svg+xml" />
     <link rel="stylesheet" href="modern.css?v=33" />
-    <link rel="stylesheet" href="redesign.css?v=13" />
+    <link rel="stylesheet" href="redesign.css?v=14" />
   </head>
   <body>
     <main class="minimal-shell">
@@ -26,13 +26,23 @@
         </nav>
         <section class="minimal-about" id="aboutPanel" aria-hidden="true">
           <div>
-            <p>
+            <p id="aboutText">
               from keller, tx and currently a senior at brown studying computer science. i like to
               work on innovative technology, collaborate on challenging problems, make/produce
               music, play soccer, hike, and shoot film.
             </p>
+            <div class="about-author-actions" id="aboutAuthorActions" hidden>
+              <button id="editAboutButton" type="button">edit about</button>
+              <button id="homeLogoutButton" type="button">log out</button>
+            </div>
           </div>
         </section>
+        <button
+          class="author-login-hotspot"
+          id="homeAuthorLoginHotspot"
+          type="button"
+          aria-label="Author login"
+        ></button>
       </section>
 
       <section class="music-view site-view" id="musicView" aria-labelledby="musicHeading" hidden>
@@ -159,6 +169,30 @@
           </label>
           <p class="blog-form-error" id="authorError" role="alert"></p>
           <button class="blog-primary-button" type="submit">Log in</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="aboutDialog" aria-labelledby="aboutDialogTitle">
+      <form class="blog-dialog-form" id="aboutForm">
+        <div class="dialog-header">
+          <h2 id="aboutDialogTitle">Edit about</h2>
+          <button
+            class="dialog-close-button"
+            type="button"
+            data-close-dialog="aboutDialog"
+            aria-label="Close editor"
+          >×</button>
+        </div>
+        <div class="blog-form-fields">
+          <label>
+            About text
+            <textarea id="aboutContent" rows="8" maxlength="2000" required></textarea>
+          </label>
+          <p class="blog-form-error" id="aboutError" role="alert"></p>
+          <div class="blog-save-actions">
+            <button class="blog-primary-button" type="submit">Save about</button>
+          </div>
         </div>
       </form>
     </dialog>
@@ -340,7 +374,7 @@
     </dialog>
 
     <script src="site-config.js?v=1"></script>
-    <script src="blog.js?v=21"></script>
-    <script src="redesign.js?v=13"></script>
+    <script src="blog.js?v=22"></script>
+    <script src="redesign.js?v=14"></script>
   </body>
 </html>

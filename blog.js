@@ -80,6 +80,14 @@
   const photoLightbox = document.querySelector("#photoLightbox");
   const photoLightboxImage = document.querySelector("#photoLightboxImage");
   const photoLightboxCaption = document.querySelector("#photoLightboxCaption");
+  const aboutText = document.querySelector("#aboutText");
+  const aboutAuthorActions = document.querySelector("#aboutAuthorActions");
+  const editAboutButton = document.querySelector("#editAboutButton");
+  const homeLogoutButton = document.querySelector("#homeLogoutButton");
+  const aboutDialog = document.querySelector("#aboutDialog");
+  const aboutForm = document.querySelector("#aboutForm");
+  const aboutContent = document.querySelector("#aboutContent");
+  const aboutError = document.querySelector("#aboutError");
   let session = readSession();
   let isVerifiedAuthor = false;
   let authorCheckPromise;
@@ -91,6 +99,7 @@
   let releases = [];
   let photosLoaded = false;
   let photos = [];
+  let aboutContentExists = false;
   const photoDimensions = new Map();
 
   function setStatus(element, message, isLoading = false) {
@@ -136,6 +145,7 @@
     photoLogoutButton.hidden = !isVerifiedAuthor;
     newPhotoButton.hidden = !isVerifiedAuthor;
     renderPhotos(photos);
+    aboutAuthorActions.hidden = !isVerifiedAuthor;
   }
 
   function setView(name) {
@@ -310,6 +320,24 @@
     } catch {
       saveSession(null);
       return false;
+    }
+  }
+
+  async function loadAboutContent() {
+    if (!isConfigured) {
+      return;
+    }
+    try {
+      const rows = await api("/rest/v1/site_content?select=content&key=eq.about");
+      if (!Array.isArray(rows) || rows.length > 1) {
+        throw new Error("Supabase returned an invalid About response.");
+      }
+      aboutContentExists = rows.length === 1;
+      if (aboutContentExists) {
+        aboutText.textContent = rows[0].content;
+      }
+    } catch (error) {
+      console.error("Could not load editable About content:", error);
     }
   }
 
@@ -1112,6 +1140,59 @@
     }
   });
 
+  editAboutButton.addEventListener("click", () => {
+    if (!isVerifiedAuthor) {
+      return;
+    }
+    aboutContent.value = aboutText.textContent.trim();
+    aboutError.textContent = "";
+    aboutDialog.showModal();
+    aboutContent.focus();
+  });
+
+  aboutForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!isVerifiedAuthor) {
+      aboutError.textContent = "Your author session is not authorized.";
+      return;
+    }
+    const content = aboutContent.value.trim();
+    if (!content) {
+      aboutError.textContent = "About text cannot be empty.";
+      return;
+    }
+    aboutError.textContent = "";
+    const submitButton = aboutForm.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      const savedRows = await api(
+        aboutContentExists
+          ? "/rest/v1/site_content?key=eq.about"
+          : "/rest/v1/site_content",
+        {
+          method: aboutContentExists ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+          body: JSON.stringify({
+            key: "about",
+            content,
+            updated_at: new Date().toISOString(),
+          }),
+        },
+        true,
+      );
+      if (!Array.isArray(savedRows) || savedRows.length !== 1) {
+        throw new Error("Supabase did not authorize this change.");
+      }
+      aboutContentExists = true;
+      aboutText.textContent = savedRows[0].content;
+      aboutDialog.close();
+    } catch (error) {
+      aboutError.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
   newPostButton.addEventListener("click", () => {
     if (!isVerifiedAuthor) {
       return;
@@ -1522,6 +1603,7 @@
   logoutButton.addEventListener("click", logout);
   musicLogoutButton.addEventListener("click", logout);
   photoLogoutButton.addEventListener("click", logout);
+  homeLogoutButton.addEventListener("click", logout);
 
   window.addEventListener("terminal:author-login", () => {
     openAuthorLogin();
@@ -1529,5 +1611,6 @@
   window.addEventListener("hashchange", applyRoute);
   renderAuthorState();
   authorCheckPromise = verifyAuthorSession();
+  loadAboutContent();
   applyRoute();
 })();

@@ -95,6 +95,37 @@ body {
   opacity: 1;
 }
 
+.about-author-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.about-author-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font: 11px/1.4 Arial, Helvetica, sans-serif;
+}
+
+.about-author-actions button:hover,
+.about-author-actions button:focus-visible {
+  color: #555;
+}
+
+#aboutDialog {
+  width: min(680px, calc(100% - 40px));
+}
+
+#aboutContent {
+  min-height: 220px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
 .minimal-link:hover,
 .minimal-link:focus-visible,
 .minimal-home-link:hover,
