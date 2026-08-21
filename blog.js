@@ -106,6 +106,7 @@
   let photosLoaded = false;
   let photos = [];
   let aboutContentExists = false;
+  let photoCarouselInteracted = false;
   const photoDimensions = new Map();
 
   function setStatus(element, message, isLoading = false) {
@@ -786,6 +787,26 @@
     photoLightbox.showModal();
   }
 
+  function getGalleryPhotoUrl(originalUrl) {
+    try {
+      const url = new URL(originalUrl);
+      const storagePath = "/storage/v1/object/public/";
+      if (url.origin !== new URL(supabaseUrl).origin || !url.pathname.includes(storagePath)) {
+        return originalUrl;
+      }
+      url.pathname = url.pathname.replace(
+        storagePath,
+        "/storage/v1/render/image/public/",
+      );
+      url.searchParams.set("width", window.innerWidth <= 560 ? "900" : "1600");
+      url.searchParams.set("quality", "82");
+      url.searchParams.set("resize", "contain");
+      return url.href;
+    } catch {
+      return originalUrl;
+    }
+  }
+
   function openPhotoEditor(photo = null) {
     if (!isVerifiedAuthor) {
       return;
@@ -927,6 +948,7 @@
     }
     photos = nextPhotos;
     photoGallery.replaceChildren();
+    photoCarouselInteracted = false;
     shufflePhotosButton.hidden = photos.length < 2;
     arrangePhotosButton.hidden = !isVerifiedAuthor || photos.length < 3;
     if (photos.length === 0) {
@@ -947,6 +969,7 @@
     orderedPhotos.forEach((photo, index) => {
       const figure = document.createElement("figure");
       figure.className = "photo-card";
+      figure.dataset.photoId = photo.id;
       if (pinnedPhotos.includes(photo)) {
         figure.dataset.pinSlot = photo.display_order;
       }
@@ -979,17 +1002,28 @@
         figure.dataset.orientation = image.naturalHeight > image.naturalWidth
           ? "portrait"
           : "landscape";
-        if (!hasKnownDimensions) {
+        if (
+          !hasKnownDimensions
+          && (window.innerWidth > 560 || !photoCarouselInteracted)
+        ) {
           arrangePhotoSlides();
         }
       });
       image.addEventListener("error", () => {
+        if (image.dataset.originalFallback !== "true") {
+          image.dataset.originalFallback = "true";
+          image.src = photo.image_url;
+          return;
+        }
         figure.dataset.orientation = "landscape";
-        if (!hasKnownDimensions) {
+        if (
+          !hasKnownDimensions
+          && (window.innerWidth > 560 || !photoCarouselInteracted)
+        ) {
           arrangePhotoSlides();
         }
       });
-      image.src = photo.image_url;
+      image.src = getGalleryPhotoUrl(photo.image_url);
       previewButton.append(image);
       figure.append(previewButton);
 
@@ -1136,15 +1170,21 @@
             resolve();
           }, { once: true });
           image.addEventListener("error", () => {
+            if (image.dataset.originalFallback !== "true") {
+              image.dataset.originalFallback = "true";
+              image.src = photo.image_url;
+              return;
+            }
             photoDimensions.set(photo.id, { width: 1, height: 1 });
             resolve();
           }, { once: true });
-          image.src = photo.image_url;
+          image.src = getGalleryPhotoUrl(photo.image_url);
         });
       }
     }
 
-    await Promise.all([preloadNext(), preloadNext()]);
+    const concurrency = window.innerWidth <= 560 ? 3 : 6;
+    await Promise.all(Array.from({ length: concurrency }, preloadNext));
   }
 
   async function loadPhotos() {
@@ -1162,8 +1202,21 @@
         isVerifiedAuthor,
       );
       photoDimensions.clear();
-      await preloadPhotos(nextPhotos);
-      renderPhotos(sortPhotos(nextPhotos));
+      const sortedPhotos = sortPhotos(nextPhotos);
+      renderPhotos(sortedPhotos);
+      preloadPhotos(sortedPhotos).then(() => {
+        photoGallery.querySelectorAll(".photo-card").forEach((card) => {
+          const dimensions = photoDimensions.get(Number(card.dataset.photoId));
+          if (dimensions) {
+            card.dataset.orientation = dimensions.height > dimensions.width
+              ? "portrait"
+              : "landscape";
+          }
+        });
+        if (window.innerWidth > 560 || !photoCarouselInteracted) {
+          arrangePhotoSlides();
+        }
+      });
     } catch (error) {
       console.error("Could not load photographs:", error);
       setStatus(photoMessage, "Could not load photographs. Please refresh and try again.");
@@ -1172,6 +1225,12 @@
 
   let photoResizeTimer;
   let photoScrollFrame;
+  photoGallery.addEventListener("pointerdown", () => {
+    photoCarouselInteracted = true;
+  });
+  photoGallery.addEventListener("touchstart", () => {
+    photoCarouselInteracted = true;
+  }, { passive: true });
   photoGallery.addEventListener("scroll", () => {
     window.cancelAnimationFrame(photoScrollFrame);
     photoScrollFrame = window.requestAnimationFrame(updatePhotoCarouselStatus);
